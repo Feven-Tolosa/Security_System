@@ -1,7 +1,17 @@
 // contexts/RequestsContext.tsx
 "use client";
 
+<<<<<<< HEAD
 import React, { createContext, useContext, useState, ReactNode } from "react";
+=======
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from "react";
+>>>>>>> d7a300d (Local updates before syncing with origin)
 
 export interface RequestData {
   id: number;
@@ -56,12 +66,40 @@ export const RequestsProvider: React.FC<RequestsProviderProps> = ({
 }) => {
   const [requests, setRequests] = useState<RequestData[]>([]);
 
+<<<<<<< HEAD
+=======
+  // Load requests from localStorage on initial render
+  useEffect(() => {
+    try {
+      const storedRequests = localStorage.getItem("secure-shield-requests");
+      if (storedRequests) {
+        setRequests(JSON.parse(storedRequests));
+      }
+    } catch (error) {
+      console.error("Failed to load requests from localStorage:", error);
+    }
+  }, []);
+
+  // Save requests to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem("secure-shield-requests", JSON.stringify(requests));
+    } catch (error) {
+      console.error("Failed to save requests to localStorage:", error);
+    }
+  }, [requests]);
+
+>>>>>>> d7a300d (Local updates before syncing with origin)
   const addRequest = (
     requestData: Omit<RequestData, "id" | "status" | "date" | "type">
   ) => {
     const newRequest: RequestData = {
       ...requestData,
+<<<<<<< HEAD
       id: requests.length + 1,
+=======
+      id: Date.now(), // Use timestamp for unique ID
+>>>>>>> d7a300d (Local updates before syncing with origin)
       status: "Pending",
       date: new Date().toISOString().split("T")[0],
       type: "SIEM Request",
