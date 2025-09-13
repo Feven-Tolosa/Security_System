@@ -1,9 +1,5 @@
-// contexts/RequestsContext.tsx
 "use client";
 
-<<<<<<< HEAD
-import React, { createContext, useContext, useState, ReactNode } from "react";
-=======
 import React, {
   createContext,
   useContext,
@@ -11,7 +7,6 @@ import React, {
   ReactNode,
   useEffect,
 } from "react";
->>>>>>> d7a300d (Local updates before syncing with origin)
 
 export interface RequestData {
   id: number;
@@ -66,8 +61,6 @@ export const RequestsProvider: React.FC<RequestsProviderProps> = ({
 }) => {
   const [requests, setRequests] = useState<RequestData[]>([]);
 
-<<<<<<< HEAD
-=======
   // Load requests from localStorage on initial render
   useEffect(() => {
     try {
@@ -89,17 +82,12 @@ export const RequestsProvider: React.FC<RequestsProviderProps> = ({
     }
   }, [requests]);
 
->>>>>>> d7a300d (Local updates before syncing with origin)
   const addRequest = (
     requestData: Omit<RequestData, "id" | "status" | "date" | "type">
   ) => {
     const newRequest: RequestData = {
       ...requestData,
-<<<<<<< HEAD
-      id: requests.length + 1,
-=======
       id: Date.now(), // Use timestamp for unique ID
->>>>>>> d7a300d (Local updates before syncing with origin)
       status: "Pending",
       date: new Date().toISOString().split("T")[0],
       type: "SIEM Request",

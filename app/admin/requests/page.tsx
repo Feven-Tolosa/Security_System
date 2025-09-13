@@ -572,7 +572,6 @@ export default function RequestsPage() {
                         Reject
                       </button>
                     )}
-<<<<<<< HEAD
                     {request.status !== "Pending" &&
                       request.status !== "Pending" && (
                         <button
@@ -585,19 +584,6 @@ export default function RequestsPage() {
                           Pending
                         </button>
                       )}
-=======
-                    {request.status !== "Pending" && (
-                      <button
-                        onClick={() =>
-                          handleStatusUpdate(request.id, "Pending")
-                        }
-                        className={getButtonStyle("pending")}
-                        title="Mark as pending"
-                      >
-                        Pending
-                      </button>
-                    )}
->>>>>>> d7a300d (Local updates before syncing with origin)
                     <button
                       onClick={() => setSelectedRequest(request)}
                       className={getButtonStyle("details")}
@@ -840,8 +826,4 @@ const DetailItem = ({
     <span className="text-sm text-gray-500">{label}:</span>
     <span className="text-sm text-gray-300 text-right">{value}</span>
   </div>
-<<<<<<< HEAD
 );
-=======
-);
->>>>>>> d7a300d (Local updates before syncing with origin)
