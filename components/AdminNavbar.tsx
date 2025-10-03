@@ -1,11 +1,28 @@
-'use client'
+"use client";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 // components/AdminNavbar.tsx
 export default function AdminNavbar() {
   const router = useRouter();
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [fullName, setFullName] = useState<string>("Admin");
+
+  useEffect(() => {
+    try {
+      const raw =
+        typeof window !== "undefined"
+          ? localStorage.getItem("admin-profile")
+          : null;
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.avatar) setAvatar(parsed.avatar as string);
+        if (parsed?.fullName) setFullName(parsed.fullName as string);
+      }
+    } catch {}
+  }, []);
 
   const handleLogout = () => {
     // Optional: clear session, cookies, or localStorage here
@@ -32,9 +49,21 @@ export default function AdminNavbar() {
 
         <Link
           href="/Admin/settings"
-          className="w-10 h-10 rounded-full bg-primary flex items-center justify-center"
+          className="w-10 h-10 rounded-full bg-primary flex items-center justify-center overflow-hidden"
+          title={fullName}
         >
-          <span className="font-bold">A</span>
+          {avatar ? (
+            // Use native img to support data URLs without Next config
+            <img
+              src={avatar}
+              alt="Profile"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span className="font-bold">
+              {fullName?.charAt(0)?.toUpperCase() || "A"}
+            </span>
+          )}
         </Link>
 
         <button

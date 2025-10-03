@@ -39,22 +39,29 @@ interface DownloadsProviderProps {
 export const DownloadsProvider: React.FC<DownloadsProviderProps> = ({
   children,
 }) => {
-  const [downloads, setDownloads] = useState<DownloadData[]>(() => {
-    const storedDownloads = localStorage.getItem("nisirDownloads");
-    if (storedDownloads) {
-      try {
-        const parsedDownloads = JSON.parse(storedDownloads);
-        return Array.isArray(parsedDownloads) ? parsedDownloads : [];
-      } catch (error) {
-        console.error("Failed to parse stored downloads:", error);
-        return [];
-      }
-    }
-    return [];
-  });
+  const [downloads, setDownloads] = useState<DownloadData[]>([]);
 
   useEffect(() => {
-    localStorage.setItem("nisirDownloads", JSON.stringify(downloads));
+    try {
+      const stored =
+        typeof window !== "undefined"
+          ? localStorage.getItem("nisirDownloads")
+          : null;
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) setDownloads(parsed);
+      }
+    } catch (error) {
+      console.error("Failed to parse stored downloads:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("nisirDownloads", JSON.stringify(downloads));
+      }
+    } catch {}
   }, [downloads]);
 
   const recordDownload = (file: string, size: string) => {

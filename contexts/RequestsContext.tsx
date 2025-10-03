@@ -177,24 +177,31 @@ interface RequestsProviderProps {
 export const RequestsProvider: React.FC<RequestsProviderProps> = ({
   children,
 }) => {
-  // Load initial requests from localStorage synchronously
-  const [requests, setRequests] = useState<RequestData[]>(() => {
-    const storedRequests = localStorage.getItem("nisirSecurityRequests");
-    if (storedRequests) {
-      try {
-        const parsedRequests = JSON.parse(storedRequests);
-        return Array.isArray(parsedRequests) ? parsedRequests : [];
-      } catch (error) {
-        console.error("Failed to parse stored requests:", error);
-        return [];
+  // SSR-safe init; hydrate from localStorage on client
+  const [requests, setRequests] = useState<RequestData[]>([]);
+
+  useEffect(() => {
+    try {
+      const stored =
+        typeof window !== "undefined"
+          ? localStorage.getItem("nisirSecurityRequests")
+          : null;
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) setRequests(parsed);
       }
+    } catch (error) {
+      console.error("Failed to load stored requests:", error);
     }
-    return [];
-  });
+  }, []);
 
   // Save requests to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem("nisirSecurityRequests", JSON.stringify(requests));
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("nisirSecurityRequests", JSON.stringify(requests));
+      }
+    } catch {}
   }, [requests]);
 
   const addRequest = (
