@@ -7,6 +7,9 @@ import GashVPN from "../../public/image/GashVPN.png";
 import GashaWAF from "../../public/image/GashWAF.png";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import jsPDF from "jspdf";
+import { useRequests } from "@/contexts/RequestsContext";
+import { useDownloads } from "@/contexts/DownloadsContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -34,6 +37,10 @@ interface RateLimitState {
 }
 
 function Gasha() {
+  const { addRequest } = useRequests();
+  const { recordDownload } = useDownloads();
+  const { t } = useLanguage();
+
   // Modal state
   const [showModal, setShowModal] = useState<boolean>(false);
   const [currentProduct, setCurrentProduct] = useState<string>("");
@@ -163,15 +170,13 @@ function Gasha() {
   };
 
   // ==============================
-  // PDF Generators (client-side using jsPDF)
+  // PDF Generators with Download Tracking
   // ==============================
   const downloadAntivirusPDF = () => {
     const doc = new jsPDF();
-
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.text("Gasha Antivirus Documentation", 20, 20);
-
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
     doc.text(
@@ -180,63 +185,54 @@ function Gasha() {
       40,
       { maxWidth: 170 }
     );
-
     doc.text("Key Features:", 20, 70);
     doc.text("- Real-Time Protection", 25, 80);
     doc.text("- AI-Powered Detection", 25, 90);
     doc.text("- Up-to-Date Database", 25, 100);
     doc.text("- Tamper Protection", 25, 110);
-
     const pdfBlob = doc.output("blob");
     const pdfUrl = URL.createObjectURL(pdfBlob);
+    recordDownload("GashaAntivirus.pdf", "1.5MB");
     window.open(pdfUrl);
   };
 
   const downloadVPNPDF = () => {
     const doc = new jsPDF();
-
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.text("Gasha VPN Documentation", 20, 20);
-
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
-    // include the currently visible VPN paragraph
     doc.text(paragraphOptions[currentTextIndex], 20, 40, { maxWidth: 170 });
-
     doc.text("Benefits:", 20, 80);
     doc.text("- Protects from data interception", 25, 90);
     doc.text("- Avoids ISP tracking", 25, 100);
     doc.text("- Bypasses geo-restrictions", 25, 110);
     doc.text("- High-speed, reliable encryption", 25, 120);
-
     const pdfBlob = doc.output("blob");
     const pdfUrl = URL.createObjectURL(pdfBlob);
+    recordDownload("GashaVPN.pdf", "1.2MB");
     window.open(pdfUrl);
   };
 
   const downloadWAFPDF = () => {
     const doc = new jsPDF();
-
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.text("Gasha WAF Documentation", 20, 20);
-
     doc.setFont("helvetica", "normal");
     doc.setFontSize(12);
-    // include the currently visible WAF paragraph
     doc.text(paragraphOptionsGASHWAF[currentTextIndex], 20, 40, {
       maxWidth: 170,
     });
-
     doc.text("Highlights:", 20, 80);
     doc.text("- Blocks SQL Injection", 25, 90);
     doc.text("- Prevents Cross-Site Scripting", 25, 100);
     doc.text("- Real-time threat detection", 25, 110);
     doc.text("- Ensures compliance & security", 25, 120);
-
     const pdfBlob = doc.output("blob");
     const pdfUrl = URL.createObjectURL(pdfBlob);
+    recordDownload("GashaWAF.pdf", "1.3MB");
     window.open(pdfUrl);
   };
 
@@ -279,7 +275,7 @@ function Gasha() {
     e.preventDefault();
 
     if (!checkRateLimit()) {
-      alert("Too many requests. Please try again in a minute.");
+      alert(t("alert_rate_limit"));
       return;
     }
 
@@ -290,22 +286,38 @@ function Gasha() {
     setIsSubmitting(true);
 
     try {
-      console.log("Form submitted:", {
-        ...formData,
-        product: currentProduct,
-        timestamp: new Date().toISOString(),
-      });
+      // Map FormData to RequestData for RequestsContext
+      const requestData = {
+        fullName: formData.name,
+        email: formData.email,
+        company: formData.companyName,
+        message: formData.message,
+        companyName: formData.companyName,
+        totalAgentless: formData.totalComputers.toString(),
+        operatingSystem:
+          `${formData.windowsOS || ""} ${formData.linuxOS || ""}`.trim() ||
+          "N/A",
+        osDetails: formData.architecture || "N/A",
+        contactName: formData.contactPerson || "N/A",
+        contactPhone: formData.contactPhone || "N/A",
+        website: "N/A",
+        officeNumber: formData.officeNumber || "N/A",
+        jobTitle: formData.jobTitle || "N/A",
+        department: formData.department || "N/A",
+        type: `${currentProduct.replace("Gasha ", "")} Request`,
+      };
+
+      // Add request to context
+      addRequest(requestData);
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      alert("Thank you for your request! We'll get back to you soon.");
+      alert(t("alert_request_thank_you"));
 
       closeModal();
     } catch (error) {
       console.error("Form submission error:", error);
-      alert(
-        "An error occurred while submitting your request. Please try again later."
-      );
+      alert(t("alert_request_error"));
     } finally {
       setIsSubmitting(false);
     }
@@ -435,7 +447,7 @@ function Gasha() {
 
   const ShieldIcon = () => (
     <svg
-      className="w-6 h-6 text-[#00E0FF] flex-shrink-0"
+      className="w-4 h-4 md:w-5 md:h-5 text-[#00E0FF] flex-shrink-0 mt-1"
       focusable="false"
       aria-hidden="true"
       viewBox="0 0 24 24"
@@ -448,73 +460,62 @@ function Gasha() {
   );
 
   return (
-    <div ref={sectionRef}>
+    <div ref={sectionRef} className="w-full">
       {/* ************ Gasha Antivirus ********** */}
-      <div className="relative w-full min-h-screen overflow-hidden mt-35">
-        <div className="absolute top-0 left-0 w-full h-full z-10 flex items-center justify-center px-6 pb-20">
-          <section className="bg-white/10 backdrop-blur-md rounded-xl p-8 shadow-xl w-full max-w-6xl text-white">
-            <div className="flex flex-col lg:flex-row items-center gap-12">
-              <div className="w-full lg:w-1/3 fade-in">
-                <Image
-                  src={GashaAntivirus}
-                  alt="Gasha Antivirus"
-                  className="w-full rounded-lg shadow-lg"
-                />
+      <div className="relative w-full min-h-screen overflow-hidden mt-16 md:mt-35">
+        <div className="absolute top-0 left-0 w-full h-full z-10 flex items-center justify-center px-4 sm:px-6 pb-8 md:pb-20 pt-8">
+          <section className="bg-white/10 backdrop-blur-md rounded-xl p-4 sm:p-6 md:p-8 shadow-xl w-full max-w-5xl text-white mx-auto">
+            <div className="flex flex-col lg:flex-row items-center gap-6 md:gap-8 lg:gap-12">
+              <div className="w-full lg:w-2/5 fade-in flex justify-center">
+                <div className="w-full max-w-[300px] lg:max-w-none">
+                  <Image
+                    src={GashaAntivirus}
+                    alt="Gasha Antivirus"
+                    className="w-full rounded-lg shadow-lg"
+                    priority
+                  />
+                </div>
               </div>
 
-              <div className="w-full lg:w-1/2 fade-in">
-                <h2 className="text-3xl font-bold my-10 pt-10 text-primary transition duration-300 hover:text-[#38BDF8]">
-                  Gasha Antivirus
+              <div className="w-full lg:w-3/5 fade-in">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold my-4 md:my-6 text-primary transition duration-300 hover:text-[#38BDF8] text-center lg:text-left">
+                  {t("gasha_av_title")}
                 </h2>
-                <p className="mb-6 text-lg leading-8 text-gray-100">
-                  A robust and intelligent defense system designed to safeguard
-                  your digital world from viruses, malware, ransomware, and
-                  evolving cyber threats. With cutting-edge technology,
-                  real-time protection, and advanced threat detection, it
-                  ensures your data, privacy, and devices stay secure.
+                <p className="mb-3 md:mb-4 text-sm sm:text-base leading-6 sm:leading-7 text-gray-100">
+                  {t("gasha_av_desc")}
                 </p>
 
-                <p className="text-gray-300  leading-8 flex items-start text-large">
-                  <ShieldIcon />
-                  <div>
-                    <strong> Real-Time Protection: </strong> Keeps desktops,
-                    laptops, downloads, and external devices safe.
-                  </div>
-                </p>
-                <p className="text-gray-300 leading-8 flex items-start text-large">
-                  <ShieldIcon />
-                  <div>
-                    <strong>AI-Powered Detection:</strong> Protects against
-                    known and unknown threats using artificial intelligence.
-                  </div>
-                </p>
-                <p className="text-gray-300 leading-8 flex items-start text-large">
-                  <ShieldIcon />
-                  <div>
-                    <strong>Up-to-Date Database:</strong> Regular virus
-                    definition updates to counter emerging threats.
-                  </div>
-                </p>
-                <p className="text-gray-300  flex items-start text-large">
-                  <ShieldIcon />
-                  <div>
-                    <strong>Tamper Protection:</strong> Secures your Windows
-                    registry from unauthorized changes.
-                  </div>
-                </p>
+                <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
+                  <p className="text-gray-300 leading-5 md:leading-6 flex items-start text-xs sm:text-sm">
+                    <ShieldIcon />
+                    <span className="ml-2">{t("gasha_av_feat_1")}</span>
+                  </p>
+                  <p className="text-gray-300 leading-5 md:leading-6 flex items-start text-xs sm:text-sm">
+                    <ShieldIcon />
+                    <span className="ml-2">{t("gasha_av_feat_2")}</span>
+                  </p>
+                  <p className="text-gray-300 leading-5 md:leading-6 flex items-start text-xs sm:text-sm">
+                    <ShieldIcon />
+                    <span className="ml-2">{t("gasha_av_feat_3")}</span>
+                  </p>
+                  <p className="text-gray-300 leading-5 md:leading-6 flex items-start text-xs sm:text-sm">
+                    <ShieldIcon />
+                    <span className="ml-2">{t("gasha_av_feat_4")}</span>
+                  </p>
+                </div>
 
-                <div className="mt-8 flex gap-4 fade-in">
+                <div className="flex flex-wrap gap-3 fade-in">
                   <button
                     onClick={downloadAntivirusPDF}
-                    className="text-white border border-white rounded-md px-6 py-3 text-sm font-semibold shadow-sm hover:bg-gradient-to-r hover:from-[#00E0FF] hover:to-gray-800 hover:text-black transition duration-300"
+                    className="text-white border border-white rounded-md px-4 py-2 text-xs sm:text-sm font-semibold shadow-sm hover:bg-gradient-to-r hover:from-[#00E0FF] hover:to-gray-800 hover:text-black transition duration-300 whitespace-nowrap"
                   >
-                    Download
+                    {t("common_download")}
                   </button>
                   <button
                     onClick={() => openModal("Gasha Antivirus")}
-                    className="text-white border border-white rounded-md px-6 py-3 text-sm font-semibold shadow-sm hover:bg-gradient-to-r hover:from-[#00E0FF] hover:to-gray-800 hover:text-black transition duration-300"
+                    className="text-white border border-white rounded-md px-4 py-2 text-xs sm:text-sm font-semibold shadow-sm hover:bg-gradient-to-r hover:from-[#00E0FF] hover:to-gray-800 hover:text-black transition duration-300 whitespace-nowrap"
                   >
-                    Send Request
+                    {t("common_send_request")}
                   </button>
                 </div>
               </div>
@@ -524,52 +525,62 @@ function Gasha() {
       </div>
 
       {/* ************ Gasha VPN ********** */}
-      <div className="relative w-full min-h-screen overflow-hidden mt-24">
-        <div className="absolute top-0 left-0 w-full h-full z-10 flex items-center justify-center px-6 py-16">
-          <div className="w-full max-w-6xl vpn-fade p-8 rounded-xl shadow-xl flex flex-col lg:flex-row items-center lg:items-start gap-10 bg-white/10 backdrop-blur-md">
-            <div className="w-full lg:w-1/2 animate-[float_4s_ease-in-out_infinite]">
-              <Image
-                src={GashVPN}
-                alt="Gasha VPN"
-                width={600}
-                height={400}
-                className="w-full rounded-lg shadow-lg"
-              />
+      <div className="relative w-full min-h-screen overflow-hidden mt-12 md:mt-24">
+        <div className="absolute top-0 left-0 w-full h-full z-10 flex items-center justify-center px-4 sm:px-6 py-12 md:py-16">
+          <div className="w-full max-w-5xl vpn-fade p-4 sm:p-6 md:p-8 rounded-xl shadow-xl flex flex-col lg:flex-row items-center lg:items-start gap-6 md:gap-8 lg:gap-10 bg-white/10 backdrop-blur-md mx-auto">
+            <div className="w-full lg:w-2/5 animate-[float_4s_ease-in-out_infinite] order-2 lg:order-1 flex justify-center">
+              <div className="w-full max-w-[300px] lg:max-w-none">
+                <Image
+                  src={GashVPN}
+                  alt="Gasha VPN"
+                  width={400}
+                  height={300}
+                  className="w-full rounded-lg shadow-lg"
+                />
+              </div>
             </div>
 
-            <div className="w-full lg:w-1/2 text-white space-y-6">
-              <h2 className="text-4xl font-bold transition duration-300">
-                <span className="text-white">Gasha </span>
-                <span className="text-[#00E0FF] hover:text-[#38BDF8]">VPN</span>
+            <div className="w-full lg:w-3/5 text-white space-y-4 md:space-y-5 order-1 lg:order-2">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold transition duration-300 text-center lg:text-left">
+                <span className="text-white">
+                  {t("gasha_vpn_title").split(" ")[0]}{" "}
+                </span>
+                <span className="text-[#00E0FF] hover:text-[#38BDF8]">
+                  {t("gasha_vpn_title").split(" ")[1]}
+                </span>
               </h2>
 
               <p
                 ref={textRef}
-                className="text-lg text-gray-300 leading-relaxed transition-opacity duration-500"
+                className="text-xs sm:text-sm md:text-base text-gray-300 leading-5 md:leading-relaxed transition-opacity duration-500 text-center lg:text-left"
               >
-                {paragraphOptions[currentTextIndex]}
+                {t(
+                  ["gasha_vpn_p1", "gasha_vpn_p2", "gasha_vpn_p3"][
+                    currentTextIndex
+                  ]
+                )}
               </p>
 
-              <div className="pt-4 flex flex-wrap gap-4">
+              <div className="pt-2 md:pt-3 flex flex-wrap gap-3 justify-center lg:justify-start">
                 <button
                   onClick={handleNextText}
-                  className="text-white border border-white rounded-full px-4 py-2 hover:bg-gradient-to-r hover:from-[#00E0FF] hover:to-gray-800 hover:text-black transition duration-300"
+                  className="text-white border border-white rounded-full px-2 py-2 hover:bg-gradient-to-r hover:from-[#00E0FF] hover:to-gray-800 hover:text-black transition duration-300 text-xs w-8 h-8 flex items-center justify-center"
                 >
                   →
                 </button>
 
                 <button
                   onClick={downloadVPNPDF}
-                  className="text-white border border-white rounded-md px-6 py-3 text-sm font-semibold shadow-sm hover:bg-gradient-to-r hover:from-[#00E0FF] hover:to-gray-800 hover:text-black transition duration-300"
+                  className="text-white border border-white rounded-md px-4 py-2 text-xs sm:text-sm font-semibold shadow-sm hover:bg-gradient-to-r hover:from-[#00E0FF] hover:to-gray-800 hover:text-black transition duration-300 whitespace-nowrap"
                 >
-                  Download
+                  {t("common_download")}
                 </button>
 
                 <button
                   onClick={() => openModal("Gasha VPN")}
-                  className="text-white border border-white rounded-md px-6 py-3 text-sm font-semibold shadow-sm hover:bg-gradient-to-r hover:from-[#00E0FF] hover:to-gray-800 hover:text-black transition duration-300"
+                  className="text-white border border-white rounded-md px-4 py-2 text-xs sm:text-sm font-semibold shadow-sm hover:bg-gradient-to-r hover:from-[#00E0FF] hover:to-gray-800 hover:text-black transition duration-300 whitespace-nowrap"
                 >
-                  Send Request
+                  {t("common_send_request")}
                 </button>
               </div>
             </div>
@@ -579,37 +590,43 @@ function Gasha() {
 
       {/* ************ Gash WAF ************ */}
       <div className="relative w-full min-h-screen overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full z-10 flex items-center justify-center px-6 py-16">
-          <div className="w-full max-w-6xl waf-fade bg-white/10 backdrop-blur-md p-8 rounded-xl shadow-xl flex flex-col lg:flex-row items-center gap-10">
-            <div className="w-full lg:w-1/3 animate-[float_4s_ease-in-out_infinite]">
-              <Image
-                src={GashaWAF}
-                alt="Gasha WAF"
-                width={300}
-                height={300}
-                className="w-full rounded-lg shadow-lg"
-              />
+        <div className="absolute top-0 left-0 w-full h-full z-10 flex items-center justify-center px-4 sm:px-6 py-12 md:py-16">
+          <div className="w-full max-w-5xl waf-fade bg-white/10 backdrop-blur-md p-4 sm:p-6 md:p-8 rounded-xl shadow-xl flex flex-col lg:flex-row items-center gap-6 md:gap-8 lg:gap-10 mx-auto">
+            <div className="w-full lg:w-2/5 animate-[float_4s_ease-in-out_infinite] flex justify-center">
+              <div className="w-full max-w-[280px] lg:max-w-none">
+                <Image
+                  src={GashaWAF}
+                  alt="Gasha WAF"
+                  width={300}
+                  height={300}
+                  className="w-full rounded-lg shadow-lg"
+                />
+              </div>
             </div>
 
-            <div className="w-full lg:w-1/2 text-white space-y-6">
-              <h2 className="text-4xl font-bold text-primary transition duration-300 hover:text-[#38BDF8]">
-                Gasha WAF
+            <div className="w-full lg:w-3/5 text-white space-y-4 md:space-y-5">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-primary transition duration-300 hover:text-[#38BDF8] text-center lg:text-left">
+                {t("gasha_waf_title")}
               </h2>
-              <p className="text-lg text-gray-300 leading-relaxed transition-opacity duration-500">
-                {paragraphOptionsGASHWAF[currentTextIndex]}
+              <p className="text-xs sm:text-sm md:text-base text-gray-300 leading-5 md:leading-relaxed transition-opacity duration-500 text-center lg:text-left">
+                {t(
+                  ["gasha_waf_p1", "gasha_waf_p2", "gasha_waf_p3"][
+                    currentTextIndex
+                  ]
+                )}
               </p>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
                 <button
                   onClick={downloadWAFPDF}
-                  className="text-white border border-white rounded-md px-6 py-3 text-sm font-semibold shadow-sm hover:bg-gradient-to-r hover:from-[#00E0FF] hover:to-gray-800 hover:text-black transition duration-300"
+                  className="text-white border border-white rounded-md px-4 py-2 text-xs sm:text-sm font-semibold shadow-sm hover:bg-gradient-to-r hover:from-[#00E0FF] hover:to-gray-800 hover:text-black transition duration-300 whitespace-nowrap"
                 >
-                  Download
+                  {t("common_download")}
                 </button>
                 <button
                   onClick={() => openModal("Gasha WAF")}
-                  className="text-white border border-white rounded-md px-6 py-3 text-sm font-semibold shadow-sm hover:bg-gradient-to-r hover:from-[#00E0FF] hover:to-gray-800 hover:text-black transition duration-300"
+                  className="text-white border border-white rounded-md px-4 py-2 text-xs sm:text-sm font-semibold shadow-sm hover:bg-gradient-to-r hover:from-[#00E0FF] hover:to-gray-800 hover:text-black transition duration-300 whitespace-nowrap"
                 >
-                  Send Request
+                  {t("common_send_request")}
                 </button>
               </div>
             </div>
@@ -619,18 +636,18 @@ function Gasha() {
 
       {/* Floating Modal Form */}
       {showModal && (
-        <div className="fixed inset-0  bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4  no-scrollbar">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 no-scrollbar">
           <div
             ref={modalRef}
-            className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg shadow-xl max-w-2xl w-full p-6 relative border border-gray-700 overflow-y-auto no-scrollbar"
+            className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg shadow-xl max-w-2xl w-full p-4 sm:p-6 relative border border-gray-700 overflow-y-auto no-scrollbar"
             style={{ maxHeight: "calc(100vh - 2rem)" }}
           >
             <button
               onClick={handleCancel}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-white transition-colors"
             >
               <svg
-                className="w-6 h-6"
+                className="w-5 h-5 sm:w-6 sm:h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -644,26 +661,26 @@ function Gasha() {
               </svg>
             </button>
 
-            <h3 className="text-2xl font-bold text-white mb-6">
-              Request {currentProduct}
+            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-4 sm:mb-6">
+              {t("request_title_prefix")} {currentProduct}
             </h3>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* CSRF Protection (hidden field) */}
               <input type="hidden" name="csrfToken" value={csrfToken} />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {/* Personal Information */}
-                <div>
-                  <label className="block text-gray-300 mb-2">
-                    Full Name *
+                <div className="md:col-span-2">
+                  <label className="block text-gray-300 mb-2 text-sm sm:text-base">
+                    {t("form_full_name")} *
                   </label>
                   <input
                     type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                     required
                     maxLength={50}
                   />
@@ -674,14 +691,16 @@ function Gasha() {
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-gray-300 mb-2">Email *</label>
+                <div className="md:col-span-2">
+                  <label className="block text-gray-300 mb-2 text-sm sm:text-base">
+                    {t("form_email")} *
+                  </label>
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                     required
                   />
                   {formErrors.email && (
@@ -692,16 +711,16 @@ function Gasha() {
                 </div>
 
                 {/* Company Information */}
-                <div>
-                  <label className="block text-gray-300 mb-2">
-                    Company Name *
+                <div className="md:col-span-2">
+                  <label className="block text-gray-300 mb-2 text-sm sm:text-base">
+                    {t("form_company_name")} *
                   </label>
                   <input
                     type="text"
                     name="companyName"
                     value={formData.companyName}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                     required
                     maxLength={100}
                   />
@@ -713,15 +732,15 @@ function Gasha() {
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 mb-2">
-                    Total Computers
+                  <label className="block text-gray-300 mb-2 text-sm sm:text-base">
+                    {t("form_total_computers")}
                   </label>
                   <input
                     type="number"
                     name="totalComputers"
                     value={formData.totalComputers}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                     min="0"
                     max="10000"
                   />
@@ -734,60 +753,60 @@ function Gasha() {
 
                 {/* Operating Systems */}
                 <div>
-                  <label className="block text-gray-300 mb-2">
-                    Windows OS Version
+                  <label className="block text-gray-300 mb-2 text-sm sm:text-base">
+                    {t("form_operating_system")} (Windows)
                   </label>
                   <input
                     type="text"
                     name="windowsOS"
                     value={formData.windowsOS}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="e.g., Windows 10, 11"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
+                    placeholder={t("form_os_windows_placeholder")}
                     maxLength={50}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 mb-2">
-                    Linux OS Version
+                  <label className="block text-gray-300 mb-2 text-sm sm:text-base">
+                    {t("form_operating_system")} (Linux)
                   </label>
                   <input
                     type="text"
                     name="linuxOS"
                     value={formData.linuxOS}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="e.g., Ubuntu 20.04, CentOS 7"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
+                    placeholder={t("form_os_linux_placeholder")}
                     maxLength={50}
                   />
                 </div>
 
                 {/* Contact Information */}
                 <div>
-                  <label className="block text-gray-300 mb-2">
-                    Contact Person
+                  <label className="block text-gray-300 mb-2 text-sm sm:text-base">
+                    {t("form_contact_name")}
                   </label>
                   <input
                     type="text"
                     name="contactPerson"
                     value={formData.contactPerson}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                     maxLength={50}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 mb-2">
-                    Contact Phone
+                  <label className="block text-gray-300 mb-2 text-sm sm:text-base">
+                    {t("form_contact_phone")}
                   </label>
                   <input
                     type="tel"
                     name="contactPhone"
                     value={formData.contactPhone}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                   />
                   {formErrors.contactPhone && (
                     <p className="text-red-400 text-sm mt-1">
@@ -798,73 +817,77 @@ function Gasha() {
 
                 {/* Job Information */}
                 <div>
-                  <label className="block text-gray-300 mb-2">Job Title</label>
+                  <label className="block text-gray-300 mb-2 text-sm sm:text-base">
+                    {t("form_job_title")}
+                  </label>
                   <input
                     type="text"
                     name="jobTitle"
                     value={formData.jobTitle}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                     maxLength={50}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 mb-2">
-                    Office Number
+                  <label className="block text-gray-300 mb-2 text-sm sm:text-base">
+                    {t("form_office_number")}
                   </label>
                   <input
                     type="text"
                     name="officeNumber"
                     value={formData.officeNumber}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                     maxLength={20}
                   />
                 </div>
 
                 {/* Additional Information */}
                 <div>
-                  <label className="block text-gray-300 mb-2">Department</label>
+                  <label className="block text-gray-300 mb-2 text-sm sm:text-base">
+                    {t("form_department")}
+                  </label>
                   <input
                     type="text"
                     name="department"
                     value={formData.department}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                     maxLength={50}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 mb-2">
-                    System Architecture
+                  <label className="block text-gray-300 mb-2 text-sm sm:text-base">
+                    {t("form_os_architecture")}
                   </label>
                   <select
                     name="architecture"
                     value={formData.architecture}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
                   >
-                    <option value="">Select architecture</option>
-                    <option value="32-bit">32-bit</option>
-                    <option value="64-bit">64-bit</option>
+                    <option value="">{t("form_select_architecture")}</option>
+                    <option value="32-bit">{t("option_32_bit")}</option>
+                    <option value="64-bit">{t("option_64_bit")}</option>
                   </select>
                 </div>
               </div>
 
               {/* Message */}
               <div>
-                <label className="block text-gray-300 mb-2">
-                  Additional Message
+                <label className="block text-gray-300 mb-2 text-sm sm:text-base">
+                  {t("form_message")}
                 </label>
                 <textarea
                   name="message"
                   value={formData.message}
                   onChange={handleInputChange}
-                  rows={4}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Tell us about your needs..."
+                  rows={3}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
+                  placeholder={t("form_message_placeholder")}
                   maxLength={500}
                 />
                 {formErrors.message && (
@@ -877,20 +900,22 @@ function Gasha() {
               <input type="hidden" name="product" value={currentProduct} />
 
               {/* Form Footer */}
-              <div className="flex justify-end gap-3 pt-4">
+              <div className="flex flex-wrap justify-end gap-3 pt-4">
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="px-6 py-2 text-gray-300 border border-gray-600 rounded-md hover:bg-gray-700 transition-colors"
+                  className="px-4 py-2 text-gray-300 border border-gray-600 rounded-md hover:bg-gray-700 transition-colors text-sm whitespace-nowrap"
                 >
-                  Cancel
+                  {t("common_cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2 bg-primary text-white rounded-md hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-primary text-white rounded-md hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap"
                 >
-                  {isSubmitting ? "Submitting..." : "Send Request"}
+                  {isSubmitting
+                    ? t("common_submitting")
+                    : t("common_send_request")}
                 </button>
               </div>
             </form>
@@ -904,10 +929,24 @@ function Gasha() {
             transform: translateY(0px);
           }
           50% {
-            transform: translateY(-20px);
+            transform: translateY(-8px);
           }
           100% {
             transform: translateY(0px);
+          }
+        }
+
+        @media (max-width: 640px) {
+          @keyframes float {
+            0% {
+              transform: translateY(0px);
+            }
+            50% {
+              transform: translateY(-4px);
+            }
+            100% {
+              transform: translateY(0px);
+            }
           }
         }
       `}</style>
@@ -915,4 +954,4 @@ function Gasha() {
   );
 }
 
-export default Gasha; 
+export default Gasha;

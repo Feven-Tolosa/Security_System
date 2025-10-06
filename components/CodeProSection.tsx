@@ -1,34 +1,36 @@
-'use client'
-import { useEffect, useRef } from 'react'
-import Image from 'next/image'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import codeprotection from '../public/image/Code Protection.png'
-import Link from 'next/link'
-import DecryptedText from '@/components/DecryptedText';
+"use client";
+import { useEffect, useRef } from "react";
+import Image from "next/image";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import codeprotection from "../public/image/Code Protection.png";
+import Link from "next/link";
+import DecryptedText from "@/components/DecryptedText";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-gsap.registerPlugin(ScrollTrigger)
+gsap.registerPlugin(ScrollTrigger);
 
 const ProductSection = () => {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const textRef = useRef<HTMLDivElement>(null)
-  const imageRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLDivElement>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (containerRef.current && textRef.current && imageRef.current) {
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
-          start: 'top center',
-          toggleActions: 'play none none reverse',
+          start: "top center",
+          toggleActions: "play none none reverse",
         },
-      })
+      });
 
       tl.to(textRef.current, {
         x: 100,
         opacity: 0,
         duration: 1.8,
-        ease: 'power2.out',
+        ease: "power2.out",
       })
         .to(
           imageRef.current,
@@ -36,18 +38,18 @@ const ProductSection = () => {
             x: -100,
             opacity: 0,
             duration: 1.4,
-            ease: 'power2.out',
+            ease: "power2.out",
           },
-          '<'
+          "<"
         )
         .add(() => {
-          containerRef.current?.classList.toggle('lg:flex-row-reverse')
+          containerRef.current?.classList.toggle("lg:flex-row-reverse");
         })
         .to(textRef.current, {
           x: 0,
           opacity: 1,
           duration: 1.8,
-          ease: 'power2.out',
+          ease: "power2.out",
         })
         .to(
           imageRef.current,
@@ -55,26 +57,26 @@ const ProductSection = () => {
             x: 0,
             opacity: 1,
             duration: 1.8,
-            ease: 'power2.out',
+            ease: "power2.out",
           },
-          '<'
-        )
+          "<"
+        );
     }
-  }, [])
+  }, []);
 
   const ShieldIcon = () => (
     <svg
-      className='w-5 h-5 sm:w-6 sm:h-6 text-[#00E0FF] flex-shrink-0 mt-1'
-      focusable='false'
-      aria-hidden='true'
-      viewBox='0 0 24 24'
+      className="w-5 h-5 sm:w-6 sm:h-6 text-[#00E0FF] flex-shrink-0 mt-1"
+      focusable="false"
+      aria-hidden="true"
+      viewBox="0 0 24 24"
     >
       <path
-        fill='currentColor'
-        d='M12 11.55C9.64 9.35 6.48 8 3 8v11c3.48 0 6.64 1.35 9 3.55 2.36-2.19 5.52-3.55 9-3.55V8c-3.48 0-6.64 1.35-9 3.55zM12 8c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z'
+        fill="currentColor"
+        d="M12 11.55C9.64 9.35 6.48 8 3 8v11c3.48 0 6.64 1.35 9 3.55 2.36-2.19 5.52-3.55 9-3.55V8c-3.48 0-6.64 1.35-9 3.55zM12 8c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z"
       />
     </svg>
-  )
+  );
 
   return (
     <div className="relative w-full flex justify-center items-center py-12 sm:py-16 md:py-20 overflow-hidden bg-transparent mx-2">
@@ -89,7 +91,7 @@ const ProductSection = () => {
           className="w-full lg:w-1/2 space-y-4 sm:space-y-6 text-white"
         >
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold flex items-center gap-3 group">
-            Cyber Defense Suite
+            {t("cp_title")}
           </h2>
 
           <div className="space-y-4 sm:space-y-6">
@@ -102,17 +104,9 @@ const ProductSection = () => {
             </p> */}
             {/* DecryptedText*/}
             <DecryptedText
-              
-              text=" Secure your cyber estate while building a resilient, future-ready
-              business. In todays rapidly evolving digital landscape, cyber
-              defense must continuously adapt to new vulnerabilities and attack
-              vectors.
+              text={`${t("cp_para_1")}
 
-                The TCS Cyber Defense Suite offers integrated services tailored to
-              modern enterprise needs. It provides enhanced visibility,
-              protection, detection, response, recovery, and governance all
-              aligned with industry standards like NIST CSF and CIS. The TCS Cyber Defense Suite offers integrated services tailored to
-              modern enterprise needs."
+${t("cp_para_2")}`}
               speed={100}
               maxIterations={20}
               characters="AB&*1234!$%#?"
@@ -141,7 +135,7 @@ const ProductSection = () => {
             href="/Code_Protection"
             className="text-white border border-white rounded-md px-3 py-1.5 sm:px-4 sm:py-2 md:px-5 md:py-2.5 bg-primary hover:bg-gradient-to-r hover:from-[#00E0FF] hover:to-gray-800 hover:text-black transition-all duration-300 text-sm sm:text-base md:text-lg"
           >
-            View Page
+            {t("common_view_page")}
           </Link>
         </div>
 
@@ -164,6 +158,6 @@ const ProductSection = () => {
       </div>
     </div>
   );
-}
+};
 
-export default ProductSection
+export default ProductSection;

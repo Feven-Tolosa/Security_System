@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import GlitchText from "@/components/GlitchText";
+import { useLanguage } from "@/contexts/LanguageContext";
 gsap.registerPlugin(ScrollTrigger);
 
 const ContactSection = () => {
@@ -11,6 +12,7 @@ const ContactSection = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const [email, setEmail] = useState("");
   const [showError, setShowError] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (containerRef.current && contentRef.current) {
@@ -46,7 +48,7 @@ const ContactSection = () => {
   const handleSend = () => {
     if (!email.trim()) {
       setShowError(true);
-      alert("Please enter your email before sending.");
+      alert(t("contact_alert_fill_email"));
       return;
     }
 
@@ -79,12 +81,11 @@ const ContactSection = () => {
             enableOnHover={true}
             className="custom-class"
           >
-            We’d love to hear from you
+            {t("contact_title")}
           </GlitchText>
 
           <p className="text-lg text-gray-300 flex justify-center items-start gap-3 group">
-            Reach out to us and let’s explore how we can help secure your
-            digital future.
+            {t("contact_subtitle")}
           </p>
 
           {/* Email Input + Send Button */}
@@ -93,7 +94,7 @@ const ContactSection = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Your email"
+              placeholder={t("contact_placeholder_email")}
               required
               className={`px-4 py-2 w-64 rounded-lg bg-gray-950 border ${
                 showError ? "border-red-500" : "border-primary"
@@ -103,7 +104,7 @@ const ContactSection = () => {
               onClick={handleSend}
               className="px-5 py-2 bg-primary hover:bg-secondary text-black font-semibold rounded-lg transition duration-300 hover:shadow-[0_0_10px_#00E0FF]"
             >
-              Send
+              {t("contact_send")}
             </button>
           </div>
         </div>

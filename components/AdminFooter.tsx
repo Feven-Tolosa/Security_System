@@ -32,12 +32,12 @@ const AdminFooter = () => {
           <Link href='/Admin' className='hover:text-primary transition-colors'>
             Dashboard
           </Link>
-          <Link
+          {/* <Link
             href='/Admin/users'
             className='hover:text-primary transition-colors'
           >
             Users
-          </Link>
+          </Link> */}
           <Link
             href='/Admin/requests'
             className='hover:text-primary transition-colors'

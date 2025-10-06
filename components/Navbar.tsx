@@ -1,30 +1,37 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  Bars3Icon,
-  XMarkIcon,
-  MoonIcon,
-  SunIcon,
-} from "@heroicons/react/24/outline";
+import React, { useState, useEffect } from "react";
+import { Bars3Icon, MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import Image from "next/image";
 import logo from "../public/image/logo.png";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { useAuth } from "@/app/providers";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
-  const [role, setRole] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const { theme, setTheme } = useTheme();
   const router = useRouter();
+  const pathname = usePathname();
+  const { user, loginWithCredentials, logout } = useAuth();
+  const { language, toggleLanguage, t } = useLanguage();
+
+  // State for notification
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: "error" | "success";
+  } | null>(null);
 
   useEffect(() => {
+    setIsLoaded(true);
+
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
     };
@@ -32,28 +39,66 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navigation = [
-    { name: "Gasha", href: "/Gasha" },
-    { name: "Nisir", href: "/Nisir" },
-    { name: "Enyuma IAM", href: "/Enyuma_IAM" },
-    { name: "Code Protection", href: "/Code_Protection" },
-    { name: "Biometrics", href: "/Biometrics" },
-    { name: "Contact us", href: "/Contact_us" },
-  ];
+  // Check authorization for protected routes
+  const normalizedPathname = pathname ? pathname.toLowerCase() : "";
+  const protectedRoutes = ["/admin", "/manager"];
+  const currentRouteRole = normalizedPathname.slice(1);
+  const isUnauthorized =
+    protectedRoutes.includes(normalizedPathname) &&
+    (!user || user.role.toLowerCase() !== currentRouteRole);
 
-  const handleLogin = () => {
-    if (!role || !email || !password) {
-      alert("Please fill in all fields");
+  if (!isLoaded) {
+    return (
+      <div className="fixed inset-0 z-50 bg-gray-900 flex items-center justify-center text-white">
+        Loading...
+      </div>
+    );
+  }
+
+  if (isUnauthorized) {
+    return (
+      <div className="fixed inset-0 z-50 bg-gray-900 flex flex-col items-center justify-center text-white">
+        <h1 className="text-6xl font-bold mb-4">404</h1>
+        <p className="text-xl mb-6">Unauthorized Access</p>
+        <p className="text-gray-400 mb-8">
+          You do not have permission to access this page. Please log in with the
+          correct credentials.
+        </p>
+        <Link
+          href="/"
+          className="bg-primary text-white px-6 py-3 rounded-lg shadow-md hover:bg-secondary transition"
+        >
+          Back to Home
+        </Link>
+      </div>
+    );
+  }
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setNotification({ message: "Please fill in all fields.", type: "error" });
+      setTimeout(() => setNotification(null), 3000);
       return;
     }
-    setLoggedIn(true);
-    setLoginModalOpen(false);
-    router.push(`/${role}`);
+    try {
+      const { role } = await loginWithCredentials(email, password);
+      setLoginModalOpen(false);
+      setEmail("");
+      setPassword("");
+      router.push(
+        role === "admin" ? "/Admin" : role === "manager" ? "/Manager" : "/"
+      );
+    } catch (e: any) {
+      setNotification({ message: e?.message || "Login failed", type: "error" });
+      setTimeout(() => setNotification(null), 3000);
+    }
   };
 
-  const handleLogout = () => {
-    setLoggedIn(false);
-    setRole("");
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {}
+    logout();
     setEmail("");
     setPassword("");
     router.push("/");
@@ -61,7 +106,7 @@ const Navbar = () => {
 
   return (
     <header
-      className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
+      className={`fixed inset-x-0 top-0 z-40 transition-all duration-300 ${
         scrolled ? "backdrop-blur-md" : ""
       }`}
     >
@@ -70,10 +115,16 @@ const Navbar = () => {
           <Image src={logo} alt="Logo" className="h-28 w-28 mr-2" />
         </Link>
 
-        {/* Desktop Menu */}
         <div className="hidden lg:flex lg:items-center lg:gap-8">
           <div className="flex gap-8 items-center">
-            {navigation.map((item) => (
+            {[
+              { name: t("nav_gasha"), href: "/Gasha" },
+              { name: t("nav_nisir"), href: "/Nisir" },
+              { name: t("nav_enyuma"), href: "/Enyuma_IAM" },
+              { name: t("nav_code_protection"), href: "/Code_Protection" },
+              { name: t("nav_biometrics"), href: "/Biometrics" },
+              { name: t("nav_contact_us"), href: "/Contact_us" },
+            ].map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
@@ -83,35 +134,54 @@ const Navbar = () => {
               </Link>
             ))}
 
-            {!loggedIn ? (
+            {!user ? (
               <button
                 onClick={() => setLoginModalOpen(true)}
                 className="text-sm font-medium dark:text-gray-100 text-primary hover:text-gray-100 dark:hover:text-primary"
               >
-                Login
+                {t("nav_login")}
               </button>
             ) : (
               <div className="flex items-center gap-4">
                 <Link
-                  href={`/${role}`}
+                  href={`/${
+                    user.role === "admin"
+                      ? "Admin"
+                      : user.role === "manager"
+                      ? "Manager"
+                      : ""
+                  }`}
                   className="text-sm font-semibold px-3 py-1 rounded bg-primary text-white shadow-md hover:shadow-lg transition"
                 >
-                  {role}
+                  {user.role === "admin"
+                    ? t("nav_role_admin")
+                    : user.role === "manager"
+                    ? t("nav_role_manager")
+                    : user.role}
                 </Link>
                 <button
                   onClick={handleLogout}
                   className="text-sm font-medium text-red-500 hover:text-red-700"
                 >
-                  Logout
+                  {t("nav_logout")}
                 </button>
               </div>
             )}
           </div>
 
           <button
+            onClick={toggleLanguage}
+            className="p-2 rounded-md border border-gray-300 dark:border-gray-700 text-xs mr-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+            aria-label="Toggle language"
+            title={`Switch to ${language === "en" ? "Amharic" : "English"}`}
+          >
+            {language === "en" ? "AM" : "EN"}
+          </button>
+
+          <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-            aria-label="Toggle theme"
+            aria-label={t("aria_toggle_theme")}
           >
             {theme === "dark" ? (
               <SunIcon className="h-5 w-5 text-yellow-300" />
@@ -121,87 +191,88 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Mobile Menu Toggle */}
         <button
           type="button"
           className="lg:hidden p-2 rounded-md text-gray-900 dark:text-gray-100 hover:text-primary dark:hover:text-primary"
-          onClick={() => setMobileMenuOpen(true)}
+          onClick={() => setMobileMenuOpen((v) => !v)}
+          aria-expanded={mobileMenuOpen}
+          aria-label="Open menu"
         >
           <Bars3Icon className="h-6 w-6" />
         </button>
       </nav>
-
-      {/* Mobile Menu */}
+      {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center space-y-6 text-white">
-          <button
-            onClick={() => setMobileMenuOpen(false)}
-            className="absolute top-4 right-4 p-2"
-          >
-            <XMarkIcon className="h-6 w-6 text-white" />
-          </button>
-
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-lg font-medium hover:text-primary"
-            >
-              {item.name}
-            </Link>
-          ))}
-
-          {!loggedIn ? (
-            <button
-              onClick={() => {
-                setLoginModalOpen(true);
-                setMobileMenuOpen(false);
-              }}
-              className="text-lg font-medium hover:text-primary"
-            >
-              Login
-            </button>
-          ) : (
-            <div className="flex flex-col items-center space-y-2">
+        <div className="lg:hidden bg-white/90 dark:bg-gray-900/80 backdrop-blur border-t border-gray-200 dark:border-gray-800">
+          <div className="px-4 py-3 space-y-3">
+            {[
+              { name: t("nav_gasha"), href: "/Gasha" },
+              { name: t("nav_nisir"), href: "/Nisir" },
+              { name: t("nav_enyuma"), href: "/Enyuma_IAM" },
+              { name: t("nav_code_protection"), href: "/Code_Protection" },
+              { name: t("nav_biometrics"), href: "/Biometrics" },
+              { name: t("nav_contact_us"), href: "/Contact_us" },
+            ].map((item) => (
               <Link
-                href={`/${role}`}
+                key={item.name}
+                href={item.href}
+                className="block text-sm font-medium dark:text-gray-100 text-primary hover:text-gray-100 dark:hover:text-primary"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-lg font-semibold px-4 py-2 rounded bg-primary text-white shadow-md hover:shadow-lg transition"
               >
-                {role}
+                {item.name}
               </Link>
+            ))}
+            {!user ? (
               <button
+                className="inline-block text-sm font-semibold px-3 py-2 rounded bg-primary text-white shadow-md"
                 onClick={() => {
-                  handleLogout();
+                  setLoginModalOpen(true);
                   setMobileMenuOpen(false);
                 }}
-                className="text-lg font-medium text-red-400 hover:text-red-600"
               >
-                Logout
+                {t("nav_login")}
               </button>
-            </div>
-          )}
+            ) : (
+              <div className="flex items-center gap-4">
+                <Link
+                  href={`/${
+                    user.role === "admin"
+                      ? "Admin"
+                      : user.role === "manager"
+                      ? "Manager"
+                      : ""
+                  }`}
+                  className="text-sm font-semibold px-3 py-1 rounded bg-primary text-white shadow-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {user.role === "admin"
+                    ? t("nav_role_admin")
+                    : user.role === "manager"
+                    ? t("nav_role_manager")
+                    : user.role}
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-sm font-medium text-red-500"
+                >
+                  {t("nav_logout")}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      {/* Login Modal */}
+      {/* Login Modal with Glowing Effects */}
       {loginModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-2xl w-full max-w-sm border border-primary">
             <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100 text-center">
-              Role-Based Login
+              Secure Login
             </h2>
-
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full mb-3 p-2 border rounded dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary shadow-[0_0_10px_rgba(0,123,255,0.5)]"
-            >
-              <option value="">Select Role</option>
-              <option value="Admin">Admin</option>
-              <option value="Manager">Manager</option>
-            </select>
 
             <input
               type="email"
@@ -218,12 +289,25 @@ const Navbar = () => {
               onChange={(e) => setPassword(e.target.value)}
             />
 
-            <div className="flex justify-between items-center">
+            {notification && (
+              <div
+                className={`mt-2 px-4 py-2 rounded-lg shadow-lg border-2 ${
+                  notification.type === "error"
+                    ? "bg-red-600 text-white border-red-400"
+                    : "bg-green-600 text-white border-green-400"
+                }`}
+                style={{ animation: "fadeInOut 3.5s ease-out forwards" }}
+              >
+                {notification.message}
+              </div>
+            )}
+
+            <div className="flex justify-between items-center mt-4">
               <button
                 onClick={handleLogin}
                 className="bg-primary text-white px-4 py-2 rounded shadow-[0_0_15px_rgba(0,123,255,0.7)] hover:shadow-[0_0_20px_rgba(0,123,255,0.9)] transition"
               >
-                Login 
+                Login
               </button>
               <button
                 onClick={() => setLoginModalOpen(false)}

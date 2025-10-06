@@ -1,32 +1,34 @@
-'use client'
+"use client";
 
-import { motion, useAnimation } from 'framer-motion'
-import { useEffect, useState } from 'react'
-import { useTheme } from 'next-themes'
-import Image from 'next/image'
-import Security from '../public/image/Security.png' // Adjust the path as necessary
-import Link from 'next/link'
+import { motion, useAnimation } from "framer-motion";
+import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
+import Image from "next/image";
+import Security from "../public/image/Security.png"; // Adjust the path as necessary
+import Link from "next/link";
 import TextType from "@/components/TextType";
+import { useLanguage } from "@/contexts/LanguageContext";
 export default function HeroSection() {
-  const { theme } = useTheme()
-  const controls = useAnimation()
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  const { theme } = useTheme();
+  const controls = useAnimation();
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { t } = useLanguage();
 
   // Image animation sequence
   useEffect(() => {
     const sequence = async () => {
       while (true) {
-        await controls.start({ opacity: 0.3, transition: { duration: 3 } })
-        await controls.start({ opacity: 1, transition: { duration: 3 } })
+        await controls.start({ opacity: 0.3, transition: { duration: 3 } });
+        await controls.start({ opacity: 1, transition: { duration: 3 } });
       }
-    }
-    sequence()
-  }, [controls])
+    };
+    sequence();
+  }, [controls]);
 
   // Detect theme change
   useEffect(() => {
-    setIsDarkMode(theme === 'dark')
-  }, [theme])
+    setIsDarkMode(theme === "dark");
+  }, [theme]);
 
   return (
     <section
@@ -47,8 +49,8 @@ export default function HeroSection() {
                 : "bg-gradient-to-r from-primary via-white to-primary text-transparent bg-clip-text text-shadow-black md:leading-16"
             }`}
           >
-            <span className="block ">Secure Your</span>
-            <span className="block">Systems with</span>
+            <span className="block ">{t("hero_secure_your")}</span>
+            <span className="block">{t("hero_systems_with")}</span>
 
             <span
               className={`block ${
@@ -57,7 +59,7 @@ export default function HeroSection() {
                   : "  bg-gradient-to-r from-white via-primary to-white text-transparent bg-clip-text"
               }`}
             >
-              Advanced Solutions
+              {t("hero_advanced_solutions")}
             </span>
           </motion.h1>
 
@@ -74,9 +76,9 @@ export default function HeroSection() {
 
           <TextType
             text={[
-              "Trust our ",
-              "homegrown solutions ",
-              "to secure your systems!",
+              t("hero_typing_trust_1"),
+              t("hero_typing_trust_2"),
+              t("hero_typing_trust_3"),
             ]}
             typingSpeed={75}
             pauseDuration={1500}

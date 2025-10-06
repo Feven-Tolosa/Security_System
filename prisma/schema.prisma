@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  email     String
+  content   String
+  seen      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Service {
+  id        Int      @id @default(autoincrement())
+  name      String
+  status    String   // e.g., "running", "down", "degraded"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model sIEMIncident {
+  id        Int      @id @default(autoincrement())
+  type      String   // e.g. "Malware", "Unauthorized Access"
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model sIEMRequest {
+  id           Int      @id @default(autoincrement())
+  fullName     String
+  email        String
+  status       String   @default("Pending") // Pending | Approved | Completed
+  downloadLink String?  // Optional: License/Installer link
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+

@@ -1,175 +1,200 @@
-// components/ManagerDashboard.tsx
-import React from 'react'
+'use client'
+import { useEffect, useState } from 'react'
 
-const ManagerDashboard = () => {
+interface Message {
+  id: number
+  email: string
+  content: string
+  seen: boolean
+  createdAt: string
+}
+
+export default function ManagerDashboard() {
+  const [messages, setMessages] = useState<Message[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Reply state
+  const [replyMode, setReplyMode] = useState<number | null>(null)
+  const [replyText, setReplyText] = useState('')
+  const [replySending, setReplySending] = useState(false)
+
+  const fetchMessages = async () => {
+    try {
+      const res = await fetch('/api/messages/all')
+      const data = await res.json()
+      if (res.ok) {
+        setMessages(data)
+      } else {
+        setError(data.error || 'Failed to load messages')
+      }
+    } catch (err) {
+      setError('Error fetching messages')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchMessages()
+  }, [])
+
+  const markAsRead = async (id: number) => {
+    await fetch('/api/messages/all', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    fetchMessages()
+  }
+
+  const deleteMessage = async (id: number) => {
+    await fetch('/api/messages/all', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    fetchMessages()
+  }
+
+  const sendReply = async (email: string) => {
+    setReplySending(true)
+    try {
+      const res = await fetch('/api/messages/all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: email,
+          subject: 'Reply from Manager page',
+          reply: replyText,
+        }),
+      })
+
+      if (res.ok) {
+        alert('Reply sent successfully ✅')
+        setReplyMode(null)
+        setReplyText('')
+      } else {
+        alert('Failed to send reply ❌')
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setReplySending(false)
+    }
+  }
+
+  if (loading) return <div className='p-6 text-white'>Loading messages...</div>
+  if (error) return <div className='p-6 text-red-500'>{error}</div>
+
   return (
-    <div className='p-6 mt-25'>
-      <div className='mb-6'>
-        <h2 className='text-2xl font-bold text-gray-800 dark:text-white'>
-          Manager Dashboard
-        </h2>
-        <p className='text-gray-400'>
-          Team management and performance monitoring
-        </p>
+    <div className='p-6 pt-35 text-white min-h-screen bg-gray-900'>
+      <h1 className='text-2xl font-bold mb-6'>Manager Dashboard</h1>
+      <h2 className='text-2xl font-bold mb-6'>📨 Messages </h2>
+
+      <div className='overflow-x-auto rounded-lg border border-gray-700'>
+        <table className='min-w-full text-left text-sm'>
+          <thead className='bg-gray-800 text-gray-300 uppercase text-xs'>
+            <tr>
+              <th className='px-4 py-3'>Email</th>
+              <th className='px-4 py-3'>Message</th>
+              <th className='px-4 py-3'>Status</th>
+              <th className='px-4 py-3'>Created At</th>
+              <th className='px-4 py-3'>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {messages.map((msg) => (
+              <tr
+                key={msg.id}
+                className={`border-t border-gray-700 ${
+                  msg.seen ? 'bg-gray-800/40' : 'bg-gray-800/80'
+                }`}
+              >
+                <td className='px-4 py-3'>{msg.email}</td>
+                <td className='px-4 py-3'>{msg.content}</td>
+                <td className='px-4 py-3'>
+                  {msg.seen ? (
+                    <span className='text-green-400 font-semibold'>Seen</span>
+                  ) : (
+                    <span className='text-yellow-400 font-semibold'>
+                      Unseen
+                    </span>
+                  )}
+                </td>
+                <td className='px-4 py-3'>
+                  {new Date(msg.createdAt).toLocaleString()}
+                </td>
+                <td className='px-4 py-3 space-x-2'>
+                  {!msg.seen && (
+                    <button
+                      onClick={() => markAsRead(msg.id)}
+                      className='px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 rounded-lg'
+                    >
+                      Mark as Read
+                    </button>
+                  )}
+                  <button
+                    onClick={() => deleteMessage(msg.id)}
+                    className='px-3 py-1 text-sm bg-red-600 hover:bg-red-700 rounded-lg'
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => setReplyMode(msg.id)}
+                    className='px-3 py-1 text-sm bg-green-600 hover:bg-green-700 rounded-lg'
+                  >
+                    Reply
+                  </button>
+                </td>
+              </tr>
+            ))}
+
+            {messages.length === 0 && (
+              <tr>
+                <td colSpan={5} className='px-4 py-6 text-center text-gray-400'>
+                  No messages found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {/* Manager-specific content */}
-      <div className='grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8'>
-        <div className='bg-white/10 backdrop-blur-md overflow-hidden shadow rounded-lg'>
-          <div className='px-4 py-5 sm:p-6'>
-            <div className='flex items-center'>
-              <div className='flex-shrink-0 bg-blue-500 rounded-md p-3'>
-                <svg
-                  className='h-6 w-6 text-white'
-                  fill='none'
-                  viewBox='0 0 24 24'
-                  stroke='currentColor'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
-                  />
-                </svg>
-              </div>
-              <div className='ml-5 w-0 flex-1'>
-                <dl>
-                  <dt className='text-sm font-medium text-gray-500 truncate'>
-                    Team Members
-                  </dt>
-                  <dd className='text-2xl font-semibold text-gray-900'>15</dd>
-                </dl>
-              </div>
+      {/* Reply Form */}
+      {replyMode && (
+        <div className='fixed inset-0 flex justify-center items-center bg-black/70'>
+          <div className='bg-gray-800 p-6 rounded-lg w-96'>
+            <h3 className='text-lg font-bold mb-4'>Reply to Message</h3>
+            <textarea
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              className='w-full p-3 rounded-lg bg-gray-900 border border-gray-700 text-white mb-4'
+              rows={5}
+              placeholder='Type your reply...'
+            />
+            <div className='flex justify-end space-x-2'>
+              <button
+                onClick={() => setReplyMode(null)}
+                className='px-3 py-1 bg-gray-600 hover:bg-gray-700 rounded-lg'
+              >
+                Cancel
+              </button>
+              <button
+                disabled={replySending}
+                onClick={() =>
+                  sendReply(
+                    messages.find((m) => m.id === replyMode)?.email || ''
+                  )
+                }
+                className='px-3 py-1 bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50'
+              >
+                {replySending ? 'Sending...' : 'Send Reply'}
+              </button>
             </div>
           </div>
         </div>
-
-        <div className='bg-white/10 backdrop-blur-md overflow-hidden shadow rounded-lg'>
-          <div className='px-4 py-5 sm:p-6'>
-            <div className='flex items-center'>
-              <div className='flex-shrink-0 bg-green-500 rounded-md p-3'>
-                <svg
-                  className='h-6 w-6 text-white'
-                  fill='none'
-                  viewBox='0 0 24 24'
-                  stroke='currentColor'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
-                  />
-                </svg>
-              </div>
-              <div className='ml-5 w-0 flex-1'>
-                <dl>
-                  <dt className='text-sm font-medium text-gray-500 truncate'>
-                    Completed Tasks
-                  </dt>
-                  <dd className='text-2xl font-semibold text-gray-900'>89%</dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className='bg-white/10 backdrop-blur-md overflow-hidden shadow rounded-lg'>
-          <div className='px-4 py-5 sm:p-6'>
-            <div className='flex items-center'>
-              <div className='flex-shrink-0 bg-yellow-500 rounded-md p-3'>
-                <svg
-                  className='h-6 w-6 text-white'
-                  fill='none'
-                  viewBox='0 0 24 24'
-                  stroke='currentColor'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
-                  />
-                </svg>
-              </div>
-              <div className='ml-5 w-0 flex-1'>
-                <dl>
-                  <dt className='text-sm font-medium text-gray-500 truncate'>
-                    Pending Reviews
-                  </dt>
-                  <dd className='text-2xl font-semibold text-gray-900'>7</dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className='bg-white/10 backdrop-blur-md shadow rounded-lg p-6 mb-8'>
-        <h3 className='text-lg font-medium text-white mb-4'>
-          Team Performance
-        </h3>
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-          <div>
-            <h4 className='font-medium text-gray-400 mb-3'>Top Performers</h4>
-            <ul className='space-y-2'>
-              <li className='flex justify-between items-center'>
-                <span>hosanna</span>
-                <span className='text-green-600 font-medium'>98%</span>
-              </li>
-              <li className='flex justify-between items-center'>
-                <span>feven</span>
-                <span className='text-green-600 font-medium'>95%</span>
-              </li>
-              <li className='flex justify-between items-center'>
-                <span>nahom</span>
-                <span className='text-green-600 font-medium'>92%</span>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h4 className='font-medium text-gray-400 mb-3'>Team Progress</h4>
-            <div className='bg-gray-200 rounded-full h-4 mb-2'>
-              <div
-                className='bg-blue-600 h-4 rounded-full'
-                style={{ width: '75%' }}
-              ></div>
-            </div>
-            <p className='text-sm text-gray-500'>
-              Quarterly target: 75% completed
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className='bg-white/10 backdrop-blur-md shadow rounded-lg p-6'>
-        <h3 className='text-lg font-medium text-white mb-4'>
-          Upcoming Reviews
-        </h3>
-        <div className='space-y-3'>
-          <div className='flex justify-between items-center p-3 bg-gray-400 rounded-lg'>
-            <div>
-              <p className='font-medium'>Monthly Performance Review</p>
-              <p className='text-sm text-gray-600'>Due: Tomorrow, 10:00 AM</p>
-            </div>
-            <button className='bg-blue-600 text-white px-3 py-1 rounded text-sm'>
-              Start
-            </button>
-          </div>
-          <div className='flex justify-between items-center p-3 bg-gray-400 rounded-lg'>
-            <div>
-              <p className='font-medium'>Team Meeting</p>
-              <p className='text-sm text-gray-600'>Due: Friday, 2:00 PM</p>
-            </div>
-            <button className='bg-gray-600 text-white px-3 py-1 rounded text-sm'>
-              Schedule
-            </button>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   )
 }
-
-export default ManagerDashboard

@@ -3,6 +3,7 @@
 import { ThemeProvider } from "next-themes";
 import { useEffect, useMemo, useState, createContext, useContext } from "react";
 import { useRouter } from "next/navigation";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 type UserRole = "admin" | "manager" | "developer" | "marketing";
 
@@ -14,6 +15,12 @@ type AuthUser = {
 type AuthContextValue = {
   user: AuthUser | null;
   loginWithEmail: (email: string) => Promise<void>;
+  loginWithCredentials: (
+    email: string,
+    password: string
+  ) => Promise<{
+    role: UserRole;
+  }>;
   logout: () => void;
 };
 
@@ -57,6 +64,29 @@ export function Providers({ children }: { children: React.ReactNode }) {
     } catch {}
   };
 
+  const loginWithCredentials = async (
+    email: string,
+    password: string
+  ): Promise<{ role: UserRole }> => {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body?.error || "Login failed");
+    }
+    const data = (await res.json()) as { ok: true; role: UserRole };
+    const normalized = email.trim().toLowerCase();
+    const nextUser: AuthUser = { email: normalized, role: data.role };
+    setUser(nextUser);
+    try {
+      localStorage.setItem("auth:user", JSON.stringify(nextUser));
+    } catch {}
+    return { role: data.role };
+  };
+
   const logout = () => {
     setUser(null);
     try {
@@ -65,13 +95,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   };
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, loginWithEmail, logout }),
+    () => ({ user, loginWithEmail, loginWithCredentials, logout }),
     [user]
   );
-
-  if (!mounted) {
-    return <>{children}</>;
-  }
 
   return (
     <ThemeProvider
@@ -80,7 +106,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       enableSystem={false}
       storageKey="secure-shield-theme"
     >
-      <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+      <LanguageProvider>
+        <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+      </LanguageProvider>
     </ThemeProvider>
   );
 }

@@ -121,3 +121,35 @@ body {
   95%  { clip-path: inset(25% 0 35% 0); }
   100% { clip-path: inset(30% 0 40% 0); }
 }
+/* Admin setting to change ligh/dark mode
+.compact-mode {
+  --spacing-unit: 0.5rem;
+}
+
+.compact-mode .p-6 {
+  padding: var(--spacing-unit);
+}
+
+.compact-mode .space-y-6 > * + * {
+  margin-top: calc(var(--spacing-unit) * 1.5);
+}
+
+.compact-mode .text-2xl {
+  font-size: 1.25rem;
+}
+
+.compact-mode .text-xl {
+  font-size: 1.125rem;
+}
+
+.compact-mode .text-lg {
+  font-size: 1rem;
+}
+
+.reduce-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+   */
+   

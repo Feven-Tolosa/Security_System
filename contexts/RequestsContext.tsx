@@ -1,15 +1,17 @@
+
 "use client";
 
 import React, {
   createContext,
   useContext,
   useState,
-  ReactNode,
   useEffect,
+  ReactNode,
 } from "react";
+import { v4 as uuidv4 } from "uuid"; // Add uuid package for unique IDs
 
 export interface RequestData {
-  id: number;
+  id: string; // Changed to string for UUID
   fullName: string;
   email: string;
   company: string;
@@ -24,18 +26,19 @@ export interface RequestData {
   officeNumber: string;
   jobTitle: string;
   department: string;
+  type: string;
   status: "Pending" | "Approved" | "Rejected";
   date: string;
-  type: string;
 }
 
 interface RequestsContextType {
   requests: RequestData[];
   addRequest: (
-    request: Omit<RequestData, "id" | "status" | "date" | "type">
+    request: Omit<RequestData, "id" | "status" | "date" | "type"> &
+      Partial<Pick<RequestData, "status" | "type">>
   ) => void;
   updateRequestStatus: (
-    id: number,
+    id: string,
     status: "Pending" | "Approved" | "Rejected"
   ) => void;
 }
@@ -59,48 +62,60 @@ interface RequestsProviderProps {
 export const RequestsProvider: React.FC<RequestsProviderProps> = ({
   children,
 }) => {
+  // SSR-safe init; hydrate from localStorage on client
   const [requests, setRequests] = useState<RequestData[]>([]);
 
-  // Load requests from localStorage on initial render
   useEffect(() => {
     try {
-      const storedRequests = localStorage.getItem("secure-shield-requests");
-      if (storedRequests) {
-        setRequests(JSON.parse(storedRequests));
+      const stored =
+        typeof window !== "undefined"
+          ? localStorage.getItem("nisirSecurityRequests")
+          : null;
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) setRequests(parsed);
       }
     } catch (error) {
-      console.error("Failed to load requests from localStorage:", error);
+      console.error("Failed to load stored requests:", error);
     }
   }, []);
 
   // Save requests to localStorage whenever they change
   useEffect(() => {
     try {
-      localStorage.setItem("secure-shield-requests", JSON.stringify(requests));
-    } catch (error) {
-      console.error("Failed to save requests to localStorage:", error);
-    }
+      if (typeof window !== "undefined") {
+        localStorage.setItem("nisirSecurityRequests", JSON.stringify(requests));
+      }
+    } catch {}
   }, [requests]);
 
   const addRequest = (
-    requestData: Omit<RequestData, "id" | "status" | "date" | "type">
+    requestData: Omit<RequestData, "id" | "status" | "date" | "type"> &
+      Partial<Pick<RequestData, "status" | "type">>
   ) => {
     const newRequest: RequestData = {
       ...requestData,
-      id: Date.now(), // Use timestamp for unique ID
-      status: "Pending",
-      date: new Date().toISOString().split("T")[0],
-      type: "SIEM Request",
+      id: uuidv4(), // Use UUID for unique IDs
+      status: requestData.status || "Pending", // Allow custom status or default to Pending
+      date: new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      type: requestData.type || "SIEM Request", // Allow custom type or default to SIEM Request
     };
-    setRequests((prev) => [...prev, newRequest]);
+
+    setRequests((prevRequests) => [newRequest, ...prevRequests]);
   };
 
   const updateRequestStatus = (
-    id: number,
+    id: string,
     status: "Pending" | "Approved" | "Rejected"
   ) => {
-    setRequests((prev) =>
-      prev.map((request) =>
+    setRequests((prevRequests) =>
+      prevRequests.map((request) =>
         request.id === id ? { ...request, status } : request
       )
     );

@@ -8,22 +8,18 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import nisir_dark from "../../public/image/nisir_dark.png";
 import Nisir from "../../public/image/Nisir.png";
 import { useRequests } from "@/contexts/RequestsContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 gsap.registerPlugin(ScrollTrigger);
 
 function NisirSIEMSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [showRequestForm, setShowRequestForm] = useState(false);
+  const { t } = useLanguage();
   const [isMounted, setIsMounted] = useState(false);
   const { addRequest } = useRequests();
 
-  const paragraphOptions = [
-    `Nisir SIEM is a next-generation security information and event management platform designed to detect, analyze, and respond to threats in real time. It aggregates logs, monitors network activity, and provides actionable insights to security teams.`,
-
-    `With advanced correlation rules, machine learning, and customizable dashboards, Nisir SIEM empowers organizations to stay ahead of evolving cyber threats. It integrates seamlessly with existing infrastructure and scales effortlessly across environments.`,
-
-    `Built with a focus on visibility and control, Nisir SIEM offers intuitive alerting, forensic analysis, and compliance reporting. Whether you're defending a small business or a national enterprise, Nisir SIEM adapts to your security needs with precision.`,
-  ];
+  const paragraphOptions = [t("nisir_p1"), t("nisir_p2"), t("nisir_p3")];
 
   useEffect(() => {
     setIsMounted(true);
@@ -83,8 +79,16 @@ function NisirSIEMSection() {
 
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
+
+      // Validate required fields
+      if (!formData.fullName || !formData.email) {
+        alert("Please fill in all required fields (Name and Email)");
+        return;
+      }
+
       addRequest(formData);
       setShowRequestForm(false);
+      alert("Your request has been submitted successfully!");
 
       // Reset form
       setFormData({
@@ -449,14 +453,14 @@ function NisirSIEMSection() {
                 onClick={() => setShowRequestForm(false)}
                 className="px-4 py-2 text-xs sm:text-sm text-gray-300 border border-gray-600 rounded-md hover:bg-gray-700 transition-colors"
               >
-                Cancel
+                {t("common_cancel")}
               </button>
               <button
                 type="submit"
                 onClick={handleSubmit}
                 className="px-4 py-2 text-xs sm:text-sm bg-primary text-white rounded-md hover:bg-secondary transition-colors"
               >
-                Submit Request
+                {t("common_submit_request")}
               </button>
             </div>
           </div>
@@ -509,14 +513,14 @@ function NisirSIEMSection() {
                 className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 object-contain"
                 style={{ verticalAlign: "middle" }}
               />
-              SIEM
+              {t("nisir_heading")}
             </h2>
 
             <button
               onClick={() => setShowRequestForm(true)}
               className="rounded-md px-4 py-2 sm:px-6 sm:py-3 text-xs sm:text-sm font-semibold shadow-sm transition-colors duration-200 bg-primary text-white hover:bg-secondary"
             >
-              Send Request
+              {t("common_send_request")}
             </button>
 
             {/* Icon + Paragraphs */}
