@@ -1,12 +1,6 @@
 import React from 'react'
-import AnalyticsOverview from '@/components/dashboard/AnalyticsOverview'
-import ServiceMonitor from '@/components/ServiceMonitor'
-import ThreatIntel from '@/components/ThreatIntel'
 import SIEMDashboard from '@/components/SIEMDashboard'
-import Messages from '@/components/Messages'
-import BiometricMonitor from '@/components/BiometricMonitor'
-import SecurityLogs from '@/components/SecurityLogs'
-import ScheduledReviews from '@/components/ScheduledReviews'
+import MessagesComponent from '@/components/MessagesComponent'
 
 const ManagerDashboard = () => {
   return (
@@ -23,7 +17,7 @@ const ManagerDashboard = () => {
 
       {/* Messages FIRST, Full Width */}
       <div className='mb-6'>
-        <Messages />
+        <MessagesComponent />
       </div>
 
       {/* Responsive Grid */}
