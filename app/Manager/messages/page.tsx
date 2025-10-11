@@ -1,5 +1,7 @@
 'use client'
+
 import { useEffect, useState } from 'react'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface Message {
   id: number
@@ -7,33 +9,27 @@ interface Message {
   content: string
   seen: boolean
   createdAt: string
-  replied?: boolean // new field in UI state (not in DB)
+  replied?: boolean
 }
 
 export default function MessagesComponent() {
+  const { t } = useLanguage()
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  // Reply state
   const [replyMode, setReplyMode] = useState<number | null>(null)
   const [replyText, setReplyText] = useState('')
   const [replySending, setReplySending] = useState(false)
-
-  // Popup notification
   const [popup, setPopup] = useState<string | null>(null)
 
   const fetchMessages = async () => {
     try {
       const res = await fetch('/api/messages/all')
       const data = await res.json()
-      if (res.ok) {
-        setMessages(data)
-      } else {
-        setError(data.error || 'Failed to load messages')
-      }
+      if (res.ok) setMessages(data)
+      else setError(data.error || t('error_loading'))
     } catch (err) {
-      setError('Error fetching messages')
+      setError(t('fetch_error'))
     } finally {
       setLoading(false)
     }
@@ -69,125 +65,126 @@ export default function MessagesComponent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           to: email,
-          subject: 'Reply from Manager Dashboard',
+          subject: t('reply_subject'),
           reply: replyText,
         }),
       })
 
       if (res.ok) {
-        // Close modal + clear text
         setReplyMode(null)
         setReplyText('')
-
-        // Update local state: mark as seen + replied
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === id ? { ...msg, seen: true, replied: true } : msg
           )
         )
-
-        // Show success popup
-        setPopup('Reply sent successfully ✅')
-        setTimeout(() => setPopup(null), 3000)
+        setPopup(t('reply_success'))
       } else {
-        setPopup('Failed to send reply ❌')
-        setTimeout(() => setPopup(null), 3000)
+        setPopup(t('reply_failed'))
       }
-    } catch (err) {
-      console.error(err)
-      setPopup('Error while sending reply ❌')
-      setTimeout(() => setPopup(null), 3000)
+    } catch {
+      setPopup(t('reply_error'))
     } finally {
       setReplySending(false)
+      setTimeout(() => setPopup(null), 3000)
     }
   }
 
   return (
-    <div className='relative'>
+    <div className='relative p-4'>
       {/* Popup Notification */}
       {popup && (
-        <div className='fixed top-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg animate-fade-in'>
+        <div className='fixed top-4 right-4 bg-[var(--color-secondary)] text-white px-4 py-2 rounded-lg shadow-lg transition-all'>
           {popup}
         </div>
       )}
 
       {/* Messages Table */}
-      <div className='overflow-x-auto rounded-lg border border-gray-700 '>
-        <table className='min-w-full text-left text-sm'>
-          <thead className=' uppercase text-xs bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-m text-gray-800 dark:text-gray-100'>
+      <div className='overflow-x-auto rounded-xl border border-gray-300 dark:border-gray-700 shadow-md'>
+        <table className='min-w-full text-sm'>
+          <thead className='uppercase text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-100'>
             <tr>
-              <th className='px-4 py-3'>Email</th>
-              <th className='px-4 py-3'>Message</th>
-              <th className='px-4 py-3'>Status</th>
-              <th className='px-4 py-3'>Created At</th>
-              <th className='px-4 py-3'>Actions</th>
+              <th className='px-4 py-3'>{t('email')}</th>
+              <th className='px-4 py-3'>{t('message')}</th>
+              <th className='px-4 py-3'>{t('status')}</th>
+              <th className='px-4 py-3'>{t('created_at')}</th>
+              <th className='px-4 py-3'>{t('actions')}</th>
             </tr>
           </thead>
+
           <tbody>
             {loading ? (
               <tr>
                 <td colSpan={5} className='px-4 py-6 text-center'>
-                  Loading messages...
+                  {t('loading')}
                 </td>
               </tr>
             ) : error ? (
               <tr>
-                <td colSpan={5} className='px-4 py-6 text-center text-red-400'>
+                <td colSpan={5} className='px-4 py-6 text-center text-red-500'>
                   {error}
                 </td>
               </tr>
             ) : messages.length === 0 ? (
               <tr>
-                <td colSpan={5} className='px-4 py-6 text-center text-gray-400'>
-                  No messages found.
+                <td colSpan={5} className='px-4 py-6 text-center text-gray-500'>
+                  {t('no_messages')}
                 </td>
               </tr>
             ) : (
               messages.map((msg) => (
                 <tr
                   key={msg.id}
-                  className={`border-t border-gray-700 ${
-                    msg.seen ? 'bg-gray-800/40' : 'bg-gray-800/80'
-                  }`}
+                  className={`border-t border-gray-200 dark:border-gray-700 ${
+                    msg.seen
+                      ? 'bg-gray-50 dark:bg-gray-900'
+                      : 'bg-[var(--color-primary)]/10 dark:bg-[var(--color-primary)]/20'
+                  } hover:bg-[var(--color-primary)]/20 dark:hover:bg-[var(--color-primary)]/30 transition`}
                 >
-                  <td className='px-4 py-3'>{msg.email}</td>
-                  <td className='px-4 py-3'>{msg.content}</td>
+                  <td className='px-4 py-3 text-gray-800 dark:text-gray-100'>
+                    {msg.email}
+                  </td>
+                  <td className='px-4 py-3 text-gray-700 dark:text-gray-200'>
+                    {msg.content}
+                  </td>
                   <td className='px-4 py-3'>
                     {msg.replied ? (
-                      <span className='text-blue-400 font-semibold'>
-                        Replied
+                      <span className='text-blue-500 font-semibold'>
+                        {t('replied')}
                       </span>
                     ) : msg.seen ? (
-                      <span className='text-green-400 font-semibold'>Seen</span>
+                      <span className='text-green-500 font-semibold'>
+                        {t('seen')}
+                      </span>
                     ) : (
-                      <span className='text-yellow-400 font-semibold'>
-                        Unseen
+                      <span className='text-yellow-500 font-semibold'>
+                        {t('unseen')}
                       </span>
                     )}
                   </td>
-                  <td className='px-4 py-3'>
+                  <td className='px-4 py-3 text-gray-600 dark:text-gray-300'>
                     {new Date(msg.createdAt).toLocaleString()}
                   </td>
                   <td className='px-4 py-3 space-x-2'>
                     {!msg.seen && !msg.replied && (
                       <button
                         onClick={() => markAsRead(msg.id)}
-                        className='px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 rounded-lg'
+                        className='px-3 py-1 text-sm rounded-md bg-[var(--color-primary)] text-white hover:opacity-90 transition'
                       >
-                        Mark as Read
+                        {t('mark_as_read')}
                       </button>
                     )}
                     <button
-                      onClick={() => deleteMessage(msg.id)}
-                      className='px-3 py-1 text-sm bg-red-600 hover:bg-red-700 rounded-lg'
+                      onClick={() => setReplyMode(msg.id)}
+                      className='px-3 py-1 text-sm rounded-md bg-[var(--color-secondary)] text-white hover:opacity-90 transition'
                     >
-                      Delete
+                      {t('reply')}
                     </button>
                     <button
-                      onClick={() => setReplyMode(msg.id)}
-                      className='px-3 py-1 text-sm bg-green-600 hover:bg-green-700 rounded-lg'
+                      onClick={() => deleteMessage(msg.id)}
+                      className='px-3 py-1 text-sm rounded-md bg-red-600 text-white hover:bg-red-700 transition'
                     >
-                      Reply
+                      {t('delete')}
                     </button>
                   </td>
                 </tr>
@@ -197,24 +194,27 @@ export default function MessagesComponent() {
         </table>
       </div>
 
-      {/* Reply Form */}
+      {/* Reply Modal */}
       {replyMode && (
-        <div className='fixed inset-0 flex justify-center items-center bg-black/70'>
-          <div className='bg-gray-800 p-6 rounded-lg w-96'>
-            <h3 className='text-lg font-bold mb-4'>Reply to Message</h3>
+        <div className='fixed inset-0 flex justify-center items-center bg-black/70 z-50'>
+          <div className='bg-white dark:bg-gray-800 p-6 rounded-lg w-96 shadow-2xl'>
+            <h3 className='text-lg font-bold mb-4 text-gray-900 dark:text-gray-100'>
+              {t('reply_message')}
+            </h3>
             <textarea
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
-              className='w-full p-3 rounded-lg bg-gray-900 border border-gray-700 text-white mb-4'
+              className='w-full p-3 rounded-md border border-gray-300 dark:border-gray-700 
+              bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white mb-4'
               rows={5}
-              placeholder='Type your reply...'
+              placeholder={t('type_reply')}
             />
-            <div className='flex justify-end space-x-2'>
+            <div className='flex justify-end gap-2'>
               <button
                 onClick={() => setReplyMode(null)}
-                className='px-3 py-1 bg-gray-600 hover:bg-gray-700 rounded-lg'
+                className='px-3 py-1 bg-gray-400 dark:bg-gray-700 text-white rounded-md hover:opacity-90 transition'
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 disabled={replySending}
@@ -224,9 +224,9 @@ export default function MessagesComponent() {
                     replyMode
                   )
                 }
-                className='px-3 py-1 bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50'
+                className='px-3 py-1 bg-[var(--color-primary)] text-white rounded-md hover:opacity-90 transition disabled:opacity-50'
               >
-                {replySending ? 'Sending...' : 'Send Reply'}
+                {replySending ? t('sending') : t('send')}
               </button>
             </div>
           </div>
