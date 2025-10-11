@@ -156,7 +156,7 @@ export default function ManagerProfileSettings({
             name='name'
             value={form.name}
             onChange={handleChange}
-            className='w-full px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600/50 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors'
+            className='w-full px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600/50 focus:border-primary focus:ring-1 focus:ring-primary transition-colors'
             required
           />
         </div>
@@ -168,7 +168,7 @@ export default function ManagerProfileSettings({
             name='email'
             value={form.email}
             onChange={handleChange}
-            className='w-full px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600/50 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors'
+            className='w-full px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600/50 focus:border-primary focus:ring-1 focus:ring-primary transition-colors'
             required
           />
         </div>
@@ -180,7 +180,7 @@ export default function ManagerProfileSettings({
             name='phone'
             value={form.phone}
             onChange={handleChange}
-            className='w-full px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600/50 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors'
+            className='w-full px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600/50 focus:border-primary focus:ring-1 focus:ring-primary transition-colors'
           />
         </div>
       </div>
@@ -188,7 +188,7 @@ export default function ManagerProfileSettings({
       <button
         type='submit'
         disabled={isLoading}
-        className='bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 text-white px-6 py-2 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-pink-500/20'
+        className='bg-primary hover:from-primary hover:to-secondary disabled:opacity-50 text-white px-6 py-2 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-pink-500/20'
       >
         {isLoading ? t('saving') : t('save_profile')}
       </button>
