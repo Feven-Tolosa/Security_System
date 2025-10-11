@@ -47,8 +47,6 @@ export default function RootLayout({
         <ThemeInitializer />
         <Providers>
           <RequestsProvider>
-            {' '}
-            {/* Wrap with RequestsProvider */}
             <PublicChrome>
               <DownloadsProvider>
                 {children}

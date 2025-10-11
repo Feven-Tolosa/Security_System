@@ -7,9 +7,10 @@ interface Message {
   content: string
   seen: boolean
   createdAt: string
+  replied?: boolean // new field in UI state (not in DB)
 }
 
-export default function ManagerDashboard() {
+export default function MessagesComponent() {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -18,6 +19,9 @@ export default function ManagerDashboard() {
   const [replyMode, setReplyMode] = useState<number | null>(null)
   const [replyText, setReplyText] = useState('')
   const [replySending, setReplySending] = useState(false)
+
+  // Popup notification
+  const [popup, setPopup] = useState<string | null>(null)
 
   const fetchMessages = async () => {
     try {
@@ -57,7 +61,7 @@ export default function ManagerDashboard() {
     fetchMessages()
   }
 
-  const sendReply = async (email: string) => {
+  const sendReply = async (email: string, id: number) => {
     setReplySending(true)
     try {
       const res = await fetch('/api/messages/all', {
@@ -65,36 +69,52 @@ export default function ManagerDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           to: email,
-          subject: 'Reply from Manager page',
+          subject: 'Reply from Manager Dashboard',
           reply: replyText,
         }),
       })
 
       if (res.ok) {
-        alert('Reply sent successfully ✅')
+        // Close modal + clear text
         setReplyMode(null)
         setReplyText('')
+
+        // Update local state: mark as seen + replied
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === id ? { ...msg, seen: true, replied: true } : msg
+          )
+        )
+
+        // Show success popup
+        setPopup('Reply sent successfully ✅')
+        setTimeout(() => setPopup(null), 3000)
       } else {
-        alert('Failed to send reply ❌')
+        setPopup('Failed to send reply ❌')
+        setTimeout(() => setPopup(null), 3000)
       }
     } catch (err) {
       console.error(err)
+      setPopup('Error while sending reply ❌')
+      setTimeout(() => setPopup(null), 3000)
     } finally {
       setReplySending(false)
     }
   }
 
-  if (loading) return <div className='p-6 text-white'>Loading messages...</div>
-  if (error) return <div className='p-6 text-red-500'>{error}</div>
-
   return (
-    <div className='p-6 pt-35 text-white min-h-screen bg-gray-900'>
-      <h1 className='text-2xl font-bold mb-6'>Manager Dashboard</h1>
-      <h2 className='text-2xl font-bold mb-6'>📨 Messages </h2>
+    <div className='relative'>
+      {/* Popup Notification */}
+      {popup && (
+        <div className='fixed top-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg animate-fade-in'>
+          {popup}
+        </div>
+      )}
 
-      <div className='overflow-x-auto rounded-lg border border-gray-700'>
+      {/* Messages Table */}
+      <div className='overflow-x-auto rounded-lg border border-gray-700 '>
         <table className='min-w-full text-left text-sm'>
-          <thead className='bg-gray-800 text-gray-300 uppercase text-xs'>
+          <thead className=' uppercase text-xs bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-m text-gray-800 dark:text-gray-100'>
             <tr>
               <th className='px-4 py-3'>Email</th>
               <th className='px-4 py-3'>Message</th>
@@ -104,58 +124,74 @@ export default function ManagerDashboard() {
             </tr>
           </thead>
           <tbody>
-            {messages.map((msg) => (
-              <tr
-                key={msg.id}
-                className={`border-t border-gray-700 ${
-                  msg.seen ? 'bg-gray-800/40' : 'bg-gray-800/80'
-                }`}
-              >
-                <td className='px-4 py-3'>{msg.email}</td>
-                <td className='px-4 py-3'>{msg.content}</td>
-                <td className='px-4 py-3'>
-                  {msg.seen ? (
-                    <span className='text-green-400 font-semibold'>Seen</span>
-                  ) : (
-                    <span className='text-yellow-400 font-semibold'>
-                      Unseen
-                    </span>
-                  )}
-                </td>
-                <td className='px-4 py-3'>
-                  {new Date(msg.createdAt).toLocaleString()}
-                </td>
-                <td className='px-4 py-3 space-x-2'>
-                  {!msg.seen && (
-                    <button
-                      onClick={() => markAsRead(msg.id)}
-                      className='px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 rounded-lg'
-                    >
-                      Mark as Read
-                    </button>
-                  )}
-                  <button
-                    onClick={() => deleteMessage(msg.id)}
-                    className='px-3 py-1 text-sm bg-red-600 hover:bg-red-700 rounded-lg'
-                  >
-                    Delete
-                  </button>
-                  <button
-                    onClick={() => setReplyMode(msg.id)}
-                    className='px-3 py-1 text-sm bg-green-600 hover:bg-green-700 rounded-lg'
-                  >
-                    Reply
-                  </button>
+            {loading ? (
+              <tr>
+                <td colSpan={5} className='px-4 py-6 text-center'>
+                  Loading messages...
                 </td>
               </tr>
-            ))}
-
-            {messages.length === 0 && (
+            ) : error ? (
+              <tr>
+                <td colSpan={5} className='px-4 py-6 text-center text-red-400'>
+                  {error}
+                </td>
+              </tr>
+            ) : messages.length === 0 ? (
               <tr>
                 <td colSpan={5} className='px-4 py-6 text-center text-gray-400'>
                   No messages found.
                 </td>
               </tr>
+            ) : (
+              messages.map((msg) => (
+                <tr
+                  key={msg.id}
+                  className={`border-t border-gray-700 ${
+                    msg.seen ? 'bg-gray-800/40' : 'bg-gray-800/80'
+                  }`}
+                >
+                  <td className='px-4 py-3'>{msg.email}</td>
+                  <td className='px-4 py-3'>{msg.content}</td>
+                  <td className='px-4 py-3'>
+                    {msg.replied ? (
+                      <span className='text-blue-400 font-semibold'>
+                        Replied
+                      </span>
+                    ) : msg.seen ? (
+                      <span className='text-green-400 font-semibold'>Seen</span>
+                    ) : (
+                      <span className='text-yellow-400 font-semibold'>
+                        Unseen
+                      </span>
+                    )}
+                  </td>
+                  <td className='px-4 py-3'>
+                    {new Date(msg.createdAt).toLocaleString()}
+                  </td>
+                  <td className='px-4 py-3 space-x-2'>
+                    {!msg.seen && !msg.replied && (
+                      <button
+                        onClick={() => markAsRead(msg.id)}
+                        className='px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 rounded-lg'
+                      >
+                        Mark as Read
+                      </button>
+                    )}
+                    <button
+                      onClick={() => deleteMessage(msg.id)}
+                      className='px-3 py-1 text-sm bg-red-600 hover:bg-red-700 rounded-lg'
+                    >
+                      Delete
+                    </button>
+                    <button
+                      onClick={() => setReplyMode(msg.id)}
+                      className='px-3 py-1 text-sm bg-green-600 hover:bg-green-700 rounded-lg'
+                    >
+                      Reply
+                    </button>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -184,7 +220,8 @@ export default function ManagerDashboard() {
                 disabled={replySending}
                 onClick={() =>
                   sendReply(
-                    messages.find((m) => m.id === replyMode)?.email || ''
+                    messages.find((m) => m.id === replyMode)?.email || '',
+                    replyMode
                   )
                 }
                 className='px-3 py-1 bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50'

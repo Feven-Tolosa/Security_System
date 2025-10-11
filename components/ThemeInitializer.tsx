@@ -10,7 +10,7 @@ export default function ThemeInitializer() {
   useEffect(() => {
     setTheme('dark') // Force dark mode on client-side
   }, [setTheme])
-  // Add to ThemeInitializer.tsx
+
   useEffect(() => {
     console.log('Initializing dark mode')
     setTheme('dark')
