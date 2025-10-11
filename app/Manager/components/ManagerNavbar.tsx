@@ -20,10 +20,10 @@ export default function ManagerNavbar() {
     >
       {/* Left Side - Logo and Title */}
       <div className='flex items-center gap-3'>
-        <Image src={logo} alt='Logo' width={50} height={50} />
-        <h1 className='text-lg font-semibold text-white'>
-          {t('manager_dashboard')}
-        </h1>
+        <Link href='/'>
+          <Image src={logo} alt='Logo' width={55} height={55} />
+        </Link>
+        <h2 className='text-lg font-semibold text-white'>{t('Manager')}</h2>
       </div>
 
       {/* Right Side - Controls */}

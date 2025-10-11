@@ -2,6 +2,7 @@
 
 import { ChangeEvent, FormEvent, useState, useEffect } from 'react'
 import { useLanguage } from '@/contexts/LanguageContext'
+import Image from 'next/image'
 
 export interface ManagerProfile {
   name: string
@@ -115,13 +116,13 @@ export default function ManagerProfileSettings({
       <div className='flex items-center gap-6'>
         <div className='relative w-24 h-24 rounded-full overflow-hidden bg-gray-700 border-2 border-gray-600 flex items-center justify-center'>
           {avatarPreview ? (
-            <img
+            <Image
               src={avatarPreview}
               alt='Avatar'
               className='w-full h-full object-cover'
             />
           ) : (
-            <span className='text-2xl text-gray-400'>
+            <span className='text-2xl text-color-primary'>
               {form.name?.charAt(0).toUpperCase() || '?'}
             </span>
           )}
@@ -129,7 +130,7 @@ export default function ManagerProfileSettings({
             <button
               type='button'
               onClick={removeAvatar}
-              className='absolute -top-1 -right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors'
+              className='absolute -top-1 -right-1 w-6 h-6 bg-secondary text-white rounded-full flex items-center justify-center hover:bg-primary transition-colors'
             >
               ×
             </button>
@@ -142,7 +143,7 @@ export default function ManagerProfileSettings({
             type='file'
             accept='image/*'
             onChange={handleAvatarChange}
-            className='w-full text-gray-300 bg-gray-700 px-4 py-2 rounded-lg border border-gray-600/50 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-purple-500 file:text-white hover:file:bg-purple-600 transition-colors'
+            className='w-full text-gray-300 bg-color-primary px-4 py-2 rounded-lg border border-gray-600/50 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-color-primary file:text-white hover:file:bg-color-primary transition-colors'
           />
         </div>
       </div>

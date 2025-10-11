@@ -63,7 +63,7 @@ export default function ManagerSettingsPage() {
             key={tab.value}
             className={`px-4 py-2 rounded-t-lg font-medium ${
               activeTab === tab.value
-                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                ? 'bg-primary text-white'
                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             } transition-all`}
             onClick={() => setActiveTab(tab.value)}
