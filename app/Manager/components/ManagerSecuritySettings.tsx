@@ -117,29 +117,33 @@ export default function ManagerSecuritySettings({
   return (
     <form onSubmit={saveSecurity} className='space-y-6'>
       <h2 className='text-xl font-semibold text-white'>
-        {t('security_settings')}
+        {t('admin_security_settings')}
       </h2>
 
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
         <div className='space-y-4'>
-          <label className='block text-gray-300'>{t('current_password')}</label>
+          <label className='block text-gray-300'>
+            {t('admin_current_password')}
+          </label>
           <input
             type='password'
             name='currentPassword'
             value={security.currentPassword}
             onChange={handleChange}
             className='w-full px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600'
-            placeholder={t('enter_current_password')}
+            placeholder={t('admin_current_password')}
           />
 
-          <label className='block text-gray-300'>{t('new_password')}</label>
+          <label className='block text-gray-300'>
+            {t('admin_new_password')}
+          </label>
           <input
             type='password'
             name='newPassword'
             value={security.newPassword}
             onChange={handleChange}
             className='w-full px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600'
-            placeholder={t('enter_new_password')}
+            placeholder={t('admin_new_password')}
           />
           {security.newPassword && (
             <div className='mt-1 w-full bg-gray-700 h-2 rounded-full'>
@@ -153,7 +157,7 @@ export default function ManagerSecuritySettings({
           )}
 
           <label className='block text-gray-300'>
-            {t('confirm_new_password')}
+            {t('admin_confirm_new_password')}
           </label>
           <input
             type='password'
@@ -161,6 +165,7 @@ export default function ManagerSecuritySettings({
             value={security.confirmPassword}
             onChange={handleChange}
             className='w-full px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600'
+            placeholder={t('admin_confirm_new_password')}
           />
         </div>
 
@@ -173,7 +178,9 @@ export default function ManagerSecuritySettings({
               onChange={handleChange}
               className='w-4 h-4 text-blue-500 bg-gray-600 border-gray-400 rounded focus:ring-blue-500'
             />
-            <label className='text-gray-200'>{t('two_factor_auth')}</label>
+            <label className='text-gray-200'>
+              {t('admin_two_factor_auth')}
+            </label>
           </div>
 
           <div className='flex items-center gap-3'>
@@ -184,11 +191,11 @@ export default function ManagerSecuritySettings({
               onChange={handleChange}
               className='w-4 h-4 text-blue-500 bg-gray-600 border-gray-400 rounded focus:ring-blue-500'
             />
-            <label className='text-gray-200'>{t('login_alerts')}</label>
+            <label className='text-gray-200'>{t('admin_login_alerts')}</label>
           </div>
 
           <div className='text-sm text-gray-400'>
-            <span>{t('last_changed')}: </span>
+            <span>{t('admin_last_changed')}: </span>
             <span>
               {new Date(security.passwordLastChanged).toLocaleString()}
             </span>
@@ -198,9 +205,9 @@ export default function ManagerSecuritySettings({
 
       <button
         type='submit'
-        className='bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-2 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all'
+        className='bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-secondary transition-all'
       >
-        {t('save_security_settings')}
+        {t('admin_security_settings')}
       </button>
     </form>
   )

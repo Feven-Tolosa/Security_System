@@ -91,7 +91,10 @@ export default function MessagesComponent() {
   }
 
   return (
-    <div className='relative p-4'>
+    <div className='relative p-4 pt-24'>
+      <h1 className='text-3xl pb-5 font-bold text-white'>
+        {t('form_message')}
+      </h1>
       {/* Popup Notification */}
       {popup && (
         <div className='fixed top-4 right-4 bg-[var(--color-secondary)] text-white px-4 py-2 rounded-lg shadow-lg transition-all'>

@@ -116,7 +116,7 @@ export default function ManagerProfileSettings({
       <div className='flex items-center gap-6'>
         <div className='relative w-24 h-24 rounded-full overflow-hidden bg-gray-700 border-2 border-gray-600 flex items-center justify-center'>
           {avatarPreview ? (
-            <Image
+            <img
               src={avatarPreview}
               alt='Avatar'
               className='w-full h-full object-cover'
@@ -150,7 +150,7 @@ export default function ManagerProfileSettings({
 
       <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <div>
-          <label className='block mb-2 text-gray-300'>{t('name')}</label>
+          <label className='block mb-2 text-gray-300'>{t('label_name')}</label>
           <input
             type='text'
             name='name'
@@ -162,7 +162,7 @@ export default function ManagerProfileSettings({
         </div>
 
         <div>
-          <label className='block mb-2 text-gray-300'>{t('email')}</label>
+          <label className='block mb-2 text-gray-300'>{t('label_email')}</label>
           <input
             type='email'
             name='email'
@@ -174,7 +174,9 @@ export default function ManagerProfileSettings({
         </div>
 
         <div>
-          <label className='block mb-2 text-gray-300'>{t('phone')}</label>
+          <label className='block mb-2 text-gray-300'>
+            {t('form_contact_phone')}
+          </label>
           <input
             type='text'
             name='phone'
@@ -190,7 +192,7 @@ export default function ManagerProfileSettings({
         disabled={isLoading}
         className='bg-primary hover:from-primary hover:to-secondary disabled:opacity-50 text-white px-6 py-2 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-pink-500/20'
       >
-        {isLoading ? t('saving') : t('save_profile')}
+        {isLoading ? t('admin_saving') : t('admin_save_profile')}
       </button>
     </form>
   )

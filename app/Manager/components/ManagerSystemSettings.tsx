@@ -49,12 +49,14 @@ export default function ManagerSystemSettings({
   return (
     <form onSubmit={saveSystem} className='space-y-6'>
       <h2 className='text-xl font-semibold text-white'>
-        {t('system_preferences')}
+        {t('admin_save_preferences')}
       </h2>
 
       <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
         <div>
-          <label className='block mb-2 text-gray-300'>{t('theme')}</label>
+          <label className='block mb-2 text-gray-300'>
+            {t('aria_toggle_theme')}
+          </label>
           <select
             name='theme'
             value={system.theme}
@@ -76,15 +78,19 @@ export default function ManagerSystemSettings({
             className='w-4 h-4 text-blue-500 bg-gray-600 border-gray-400 rounded focus:ring-blue-500'
           />
           <div>
-            <label className='text-gray-200'>{t('automatic_backups')}</label>
-            <p className='text-sm text-gray-400'>{t('auto_backup_hint')}</p>
+            <label className='text-gray-200'>
+              {t('admin_automatic_backups')}
+            </label>
+            <p className='text-sm text-gray-400'>
+              {t('admin_auto_backup_hint')}
+            </p>
           </div>
         </div>
 
         {system.autoBackup && (
           <div>
             <label className='block mb-2 text-gray-300'>
-              {t('backup_frequency')}
+              {t('admin_backup_frequency')}
             </label>
             <select
               name='backupFrequency'
@@ -102,9 +108,9 @@ export default function ManagerSystemSettings({
 
       <button
         type='submit'
-        className='bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-2 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all'
+        className='bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-secondary transition-all'
       >
-        {t('save_system_settings')}
+        {t('admin_save_preferences')}
       </button>
     </form>
   )

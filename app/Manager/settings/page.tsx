@@ -53,8 +53,8 @@ export default function ManagerSettingsPage() {
   ]
 
   return (
-    <div className='p-6 space-y-6'>
-      <h1 className='text-3xl font-bold text-white'>{t('manager_settings')}</h1>
+    <div className='p-6 space-y-6 pt-24'>
+      <h1 className='text-3xl font-bold text-white'>{t('settings')}</h1>
 
       {/* Tabs */}
       <div className='flex gap-4 border-b border-gray-600 pb-2'>
