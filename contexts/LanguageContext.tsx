@@ -338,8 +338,12 @@ const TRANSLATIONS: TranslationsMap = {
     reply_success: 'Reply sent successfully ✅',
     reply_failed: 'Failed to send reply ❌',
     reply_error: 'Error while sending reply ❌',
+    manager_weekly_trend: 'Weekly Trends',
+    manager_alert_distribution: 'Alert Type Distribution',
   },
   am: {
+    manager_weekly_trend: 'ሳምንታዊ እንቅስቃሴ',
+    manager_alert_distribution: 'የአለርት አይነት ስፋት',
     nav_gasha: 'ጋሻ',
     nav_nisir: 'ንስር',
     nav_enyuma: 'ኢኒዩማ አይኤኤም',

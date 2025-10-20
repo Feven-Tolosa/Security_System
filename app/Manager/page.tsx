@@ -11,7 +11,20 @@ import {
 } from '@heroicons/react/24/outline'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useTheme } from 'next-themes'
-import { motion, AnimatePresence } from 'framer-motion' // 👈 for animations
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Legend,
+} from 'recharts'
 
 interface Alert {
   id: number
@@ -37,17 +50,27 @@ const ManagerDashboardPage = () => {
     { label: t('manager_ready_download'), value: 24, icon: ArrowDownTrayIcon },
     { label: t('manager_ready_software'), value: 15, icon: CubeIcon },
     { label: t('manager_pending_alerts'), value: 8, icon: BellAlertIcon },
-    { label: t('manager_response_rate'), value: '96%', icon: ChartBarIcon },
+    { label: t('manager_response_rate'), value: 96, icon: ChartBarIcon },
   ])
 
-  // Load and save logic...
+  const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444']
+
+  const activityTrend = [
+    { name: 'Mon', alerts: 2, resolved: 3 },
+    { name: 'Tue', alerts: 3, resolved: 1 },
+    { name: 'Wed', alerts: 5, resolved: 4 },
+    { name: 'Thu', alerts: 4, resolved: 5 },
+    { name: 'Fri', alerts: 6, resolved: 4 },
+    { name: 'Sat', alerts: 3, resolved: 5 },
+    { name: 'Sun', alerts: 2, resolved: 2 },
+  ]
+
   useEffect(() => {
     const storedAlerts = localStorage.getItem('managerAlerts')
     const storedLog = localStorage.getItem('managerActivityLog')
 
-    if (storedAlerts) {
-      setAlerts(JSON.parse(storedAlerts))
-    } else {
+    if (storedAlerts) setAlerts(JSON.parse(storedAlerts))
+    else {
       setAlerts([
         {
           id: 1,
@@ -70,11 +93,8 @@ const ManagerDashboardPage = () => {
       ])
     }
 
-    if (storedLog) {
-      setActivityLog(JSON.parse(storedLog))
-    } else {
-      addActivityLog(t('manager_system_check'), 'info')
-    }
+    if (storedLog) setActivityLog(JSON.parse(storedLog))
+    else addActivityLog(t('manager_system_check'), 'info')
   }, [t])
 
   useEffect(() => {
@@ -133,149 +153,150 @@ const ManagerDashboardPage = () => {
         className='mb-10 text-center'
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
       >
-        <h1 className='text-4xl font-bold text-primary shadow-black drop-shadow-lg'>
+        <h1 className='text-4xl font-bold text-primary tracking-tight'>
           {t('manager_dashboard_title')}
         </h1>
-        <p className='text-gray-600 dark:text-gray-400'>
+        <p className='text-gray-500 dark:text-gray-400'>
           {t('manager_dashboard_subtitle')}
         </p>
       </motion.div>
 
-      {/* Stats Section */}
+      {/* Stats Cards */}
       <div className='grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10'>
-        {stats.map(({ label, value, icon: Icon }, index) => (
+        {stats.map(({ label, value, icon: Icon }, i) => (
           <motion.div
             key={label}
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ delay: index * 0.1, type: 'spring', stiffness: 100 }}
-            whileHover={{
-              y: -5,
-              boxShadow: isDark
-                ? '0px 8px 20px rgba(0, 0, 0, 0.6)'
-                : '0px 8px 20px rgba(0, 0, 0, 0.15)',
-            }}
-            className={`p-6 rounded-2xl text-center cursor-pointer transform transition-all duration-300 ${
+            whileHover={{ y: -4, scale: 1.02 }}
+            transition={{ type: 'spring', stiffness: 120 }}
+            className={`p-6 rounded-2xl text-center backdrop-blur-md shadow-lg border ${
               isDark
-                ? 'bg-gray-900/60 shadow-lg shadow-gray-800/40'
-                : 'bg-white/90 shadow-md shadow-gray-300/50'
+                ? 'bg-gray-900/50 border-gray-700'
+                : 'bg-white/70 border-gray-200'
             }`}
           >
-            <div className='flex justify-center mb-3'>
-              <Icon className='h-10 w-10 text-primary drop-shadow-md' />
-            </div>
-            <h3 className='text-lg font-medium text-gray-400 dark:text-gray-300'>
-              {label}
-            </h3>
-            <p className='text-3xl font-bold text-white dark:text-white'>
-              {value}
-            </p>
+            <Icon className='h-10 w-10 mx-auto mb-3 text-primary' />
+            <h3 className='text-sm text-gray-400'>{label}</h3>
+            <p className='text-3xl font-semibold text-primary'>{value}</p>
           </motion.div>
         ))}
       </div>
 
-      {/* Alerts Section */}
-      <motion.section
-        className={`p-6 rounded-2xl shadow-lg mb-10 ${
-          isDark ? 'bg-gray-900/60' : 'bg-white/90'
-        }`}
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <h2 className='text-xl font-semibold text-primary mb-4'>
-          {t('manager_recent_alerts')}
-        </h2>
-        <AnimatePresence>
-          {alerts.length === 0 ? (
-            <p className='text-gray-400'>{t('manager_no_alerts')} 🎉</p>
-          ) : (
-            alerts.map((alert) => (
-              <motion.div
-                key={alert.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                whileHover={{ scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-                className={`flex items-center justify-between gap-3 p-4 mb-3 rounded-xl transition ${
-                  alert.resolved
-                    ? 'bg-green-800/40 shadow-lg shadow-green-700/30'
-                    : 'bg-gray-800/40 hover:shadow-lg hover:shadow-yellow-600/20'
-                }`}
+      {/* Charts */}
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12'>
+        {/* Pie Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`p-6 rounded-2xl shadow-lg border ${
+            isDark
+              ? 'bg-gray-900/70 border-gray-700'
+              : 'bg-white border-gray-200'
+          }`}
+        >
+          <h2 className='text-xl font-semibold mb-4 text-primary'>
+            {t('manager_alert_distribution')}
+          </h2>
+          <ResponsiveContainer width='100%' height={260}>
+            <PieChart>
+              <defs>
+                <linearGradient id='pieGradient' x1='0' y1='0' x2='1' y2='1'>
+                  <stop offset='0%' stopColor='#3b82f6' />
+                  <stop offset='100%' stopColor='#22c55e' />
+                </linearGradient>
+              </defs>
+              <Pie
+                data={stats}
+                dataKey='value'
+                nameKey='label'
+                outerRadius={110}
+                innerRadius={60}
+                fill='url(#pieGradient)'
+                label
+                isAnimationActive
               >
-                <div className='flex items-center gap-3'>
-                  <ExclamationCircleIcon
-                    className={`h-5 w-5 ${
-                      alert.resolved ? 'text-green-400' : 'text-yellow-500'
-                    }`}
-                  />
-                  <div>
-                    <p className='text-sm font-medium'>{alert.type}</p>
-                    <p className='text-xs text-gray-400'>{alert.msg}</p>
-                  </div>
-                </div>
-                {!alert.resolved && (
-                  <button
-                    onClick={() => resolveAlert(alert.id)}
-                    className='text-sm bg-primary/20 hover:bg-primary/40 text-primary px-3 py-1 rounded-lg transition'
-                  >
-                    {t('manager_mark_resolved')}
-                  </button>
-                )}
-              </motion.div>
-            ))
-          )}
-        </AnimatePresence>
-      </motion.section>
-
-      {/* Activity Logs */}
-      <motion.section
-        className={`p-6 rounded-2xl  shadow-lg ${
-          isDark ? 'bg-gray-900/60' : 'bg-white/90'
-        }`}
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <h2 className='text-xl font-semibold text-primary mb-4'>
-          {t('manager_recent_activity')}
-        </h2>
-        <div className='space-y-3'>
-          <AnimatePresence>
-            {activityLog.map((log) => (
-              <motion.div
-                key={log.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.2 }}
-                whileHover={{
-                  scale: 1.02,
-                  boxShadow: isDark
-                    ? '0px 8px 18px rgba(0,0,0,0.6)'
-                    : '0px 8px 18px rgba(0,0,0,0.1)',
+                {stats.map((_, idx) => (
+                  <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: isDark ? '#1f2937' : '#fff',
+                  borderRadius: 12,
+                  border: 'none',
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.1)',
                 }}
-                className={`flex items-center mb-3 gap-3 p-3 rounded-xl transition ${
-                  log.type === 'success'
-                    ? 'bg-green-800/30'
-                    : log.type === 'warning'
-                    ? 'bg-yellow-800/30'
-                    : 'bg-gray-800/40'
-                }`}
-              >
-                <ShieldCheckIcon className='h-5 w-5 text-blue-500' />
-                <div>
-                  <p className='text-sm font-medium'>{log.message}</p>
-                  <p className='text-xs text-gray-400'>{log.time}</p>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-      </motion.section>
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </motion.div>
+
+        {/* Line Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`p-6 rounded-2xl shadow-lg border ${
+            isDark
+              ? 'bg-gray-900/70 border-gray-700'
+              : 'bg-white border-gray-200'
+          }`}
+        >
+          <h2 className='text-xl font-semibold mb-4 text-primary'>
+            {t('manager_weekly_trend')}
+          </h2>
+          <ResponsiveContainer width='100%' height={260}>
+            <LineChart data={activityTrend}>
+              <defs>
+                <linearGradient id='alertsGradient' x1='0' y1='0' x2='0' y2='1'>
+                  <stop offset='0%' stopColor='#ef4444' stopOpacity={0.9} />
+                  <stop offset='100%' stopColor='#ef4444' stopOpacity={0.1} />
+                </linearGradient>
+                <linearGradient
+                  id='resolvedGradient'
+                  x1='0'
+                  y1='0'
+                  x2='0'
+                  y2='1'
+                >
+                  <stop offset='0%' stopColor='#22c55e' stopOpacity={0.9} />
+                  <stop offset='100%' stopColor='#22c55e' stopOpacity={0.1} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                strokeDasharray='3 3'
+                stroke={isDark ? '#374151' : '#e5e7eb'}
+              />
+              <XAxis dataKey='name' stroke={isDark ? '#9ca3af' : '#4b5563'} />
+              <YAxis stroke={isDark ? '#9ca3af' : '#4b5563'} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: isDark ? '#1f2937' : '#fff',
+                  borderRadius: 12,
+                  border: 'none',
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.1)',
+                }}
+              />
+              <Legend />
+              <Line
+                type='monotone'
+                dataKey='alerts'
+                stroke='url(#alertsGradient)'
+                strokeWidth={3}
+                dot={{ r: 5 }}
+                activeDot={{ r: 8 }}
+              />
+              <Line
+                type='monotone'
+                dataKey='resolved'
+                stroke='url(#resolvedGradient)'
+                strokeWidth={3}
+                dot={{ r: 5 }}
+                activeDot={{ r: 8 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </motion.div>
+      </div>
     </main>
   )
 }

@@ -28,7 +28,7 @@ export default function MessagesComponent() {
       const data = await res.json()
       if (res.ok) setMessages(data)
       else setError(data.error || t('error_loading'))
-    } catch (err) {
+    } catch {
       setError(t('fetch_error'))
     } finally {
       setLoading(false)
@@ -91,21 +91,22 @@ export default function MessagesComponent() {
   }
 
   return (
-    <div className='relative p-4 pt-24'>
-      <h1 className='text-3xl pb-5 font-bold text-white'>
+    <div className='relative p-6 pt-24 transition-colors duration-300 bg-gray-50 dark:bg-gray-950 min-h-screen'>
+      <h1 className='text-3xl font-bold mb-6 text-gray-900 dark:text-white'>
         {t('form_message')}
       </h1>
+
       {/* Popup Notification */}
       {popup && (
-        <div className='fixed top-4 right-4 bg-[var(--color-secondary)] text-white px-4 py-2 rounded-lg shadow-lg transition-all'>
+        <div className='fixed top-5 right-5 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg shadow-lg transition-all z-50'>
           {popup}
         </div>
       )}
 
       {/* Messages Table */}
-      <div className='overflow-x-auto rounded-xl border border-gray-300 dark:border-gray-700 shadow-md'>
+      <div className='overflow-x-auto rounded-xl border border-gray-300 dark:border-gray-800 shadow-lg bg-white dark:bg-gray-900'>
         <table className='min-w-full text-sm'>
-          <thead className='uppercase text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-100'>
+          <thead className='uppercase text-xs bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'>
             <tr>
               <th className='px-4 py-3'>{t('email')}</th>
               <th className='px-4 py-3'>{t('message')}</th>
@@ -118,19 +119,28 @@ export default function MessagesComponent() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className='px-4 py-6 text-center'>
+                <td
+                  colSpan={5}
+                  className='px-4 py-6 text-center text-gray-500 dark:text-gray-400'
+                >
                   {t('loading')}
                 </td>
               </tr>
             ) : error ? (
               <tr>
-                <td colSpan={5} className='px-4 py-6 text-center text-red-500'>
+                <td
+                  colSpan={5}
+                  className='px-4 py-6 text-center text-red-600 dark:text-red-400'
+                >
                   {error}
                 </td>
               </tr>
             ) : messages.length === 0 ? (
               <tr>
-                <td colSpan={5} className='px-4 py-6 text-center text-gray-500'>
+                <td
+                  colSpan={5}
+                  className='px-4 py-6 text-center text-gray-500 dark:text-gray-400'
+                >
                   {t('no_messages')}
                 </td>
               </tr>
@@ -138,54 +148,54 @@ export default function MessagesComponent() {
               messages.map((msg) => (
                 <tr
                   key={msg.id}
-                  className={`border-t border-gray-200 dark:border-gray-700 ${
+                  className={`border-t border-gray-200 dark:border-gray-700 transition-colors ${
                     msg.seen
-                      ? 'bg-gray-50 dark:bg-gray-900'
-                      : 'bg-[var(--color-primary)]/10 dark:bg-[var(--color-primary)]/20'
-                  } hover:bg-[var(--color-primary)]/20 dark:hover:bg-[var(--color-primary)]/30 transition`}
+                      ? 'bg-gray-50 dark:bg-gray-950'
+                      : 'bg-purple-50/40 dark:bg-purple-900/20'
+                  } hover:bg-purple-100/50 dark:hover:bg-purple-800/30`}
                 >
-                  <td className='px-4 py-3 text-gray-800 dark:text-gray-100'>
+                  <td className='px-4 py-3 text-gray-900 dark:text-gray-200'>
                     {msg.email}
                   </td>
-                  <td className='px-4 py-3 text-gray-700 dark:text-gray-200'>
+                  <td className='px-4 py-3 text-gray-800 dark:text-gray-300'>
                     {msg.content}
                   </td>
                   <td className='px-4 py-3'>
                     {msg.replied ? (
-                      <span className='text-blue-500 font-semibold'>
+                      <span className='text-blue-600 dark:text-blue-400 font-medium'>
                         {t('replied')}
                       </span>
                     ) : msg.seen ? (
-                      <span className='text-green-500 font-semibold'>
+                      <span className='text-green-600 dark:text-green-400 font-medium'>
                         {t('seen')}
                       </span>
                     ) : (
-                      <span className='text-yellow-500 font-semibold'>
+                      <span className='text-yellow-600 dark:text-yellow-400 font-medium'>
                         {t('unseen')}
                       </span>
                     )}
                   </td>
-                  <td className='px-4 py-3 text-gray-600 dark:text-gray-300'>
+                  <td className='px-4 py-3 text-gray-700 dark:text-gray-400'>
                     {new Date(msg.createdAt).toLocaleString()}
                   </td>
                   <td className='px-4 py-3 space-x-2'>
                     {!msg.seen && !msg.replied && (
                       <button
                         onClick={() => markAsRead(msg.id)}
-                        className='px-3 py-1 text-sm rounded-md bg-[var(--color-primary)] text-white hover:opacity-90 transition'
+                        className='px-3 py-1 text-sm rounded-md bg-green-600 hover:bg-green-700 text-white transition'
                       >
                         {t('mark_as_read')}
                       </button>
                     )}
                     <button
                       onClick={() => setReplyMode(msg.id)}
-                      className='px-3 py-1 text-sm rounded-md bg-[var(--color-secondary)] text-white hover:opacity-90 transition'
+                      className='px-3 py-1 text-sm rounded-md bg-purple-600 hover:bg-purple-700 text-white transition'
                     >
                       {t('reply')}
                     </button>
                     <button
                       onClick={() => deleteMessage(msg.id)}
-                      className='px-3 py-1 text-sm rounded-md bg-red-600 text-white hover:bg-red-700 transition'
+                      className='px-3 py-1 text-sm rounded-md bg-red-600 hover:bg-red-700 text-white transition'
                     >
                       {t('delete')}
                     </button>
@@ -200,15 +210,14 @@ export default function MessagesComponent() {
       {/* Reply Modal */}
       {replyMode && (
         <div className='fixed inset-0 flex justify-center items-center bg-black/70 z-50'>
-          <div className='bg-white dark:bg-gray-800 p-6 rounded-lg w-96 shadow-2xl'>
-            <h3 className='text-lg font-bold mb-4 text-gray-900 dark:text-gray-100'>
+          <div className='bg-white dark:bg-gray-900 p-6 rounded-xl w-96 shadow-2xl border border-gray-200 dark:border-gray-700'>
+            <h3 className='text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100'>
               {t('reply_message')}
             </h3>
             <textarea
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
-              className='w-full p-3 rounded-md border border-gray-300 dark:border-gray-700 
-              bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white mb-4'
+              className='w-full p-3 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 mb-4'
               rows={5}
               placeholder={t('type_reply')}
             />
@@ -227,7 +236,7 @@ export default function MessagesComponent() {
                     replyMode
                   )
                 }
-                className='px-3 py-1 bg-[var(--color-primary)] text-white rounded-md hover:opacity-90 transition disabled:opacity-50'
+                className='px-3 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-md hover:opacity-90 transition disabled:opacity-50'
               >
                 {replySending ? t('sending') : t('send')}
               </button>
