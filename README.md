@@ -1,6 +1,6 @@
 # Security-Systems - Advanced Security Systems
 
-![Security-Systems Banner](/public/images/Security.png)
+![Security-Systems Banner](/public/image/security.png)
 
 A modern security systems company website built with Next.js, Tailwind CSS, and Framer Motion featuring dynamic theming, video backgrounds, and animated UI components.
 
