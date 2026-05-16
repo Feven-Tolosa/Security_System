@@ -8,7 +8,7 @@ A modern and responsive security management platform built to help organizations
 
 ---
 
-# 📌 Overview
+## 📌 Overview
 
 Security System is a web-based platform designed to provide a secure and efficient system management experience. The platform combines modern frontend technologies with database integration to manage and organize security-related data effectively.
 
@@ -18,7 +18,7 @@ Developed collaboratively by **Feven Tolosa** and **Hosanna Walle**.
 
 ---
 
-# ✨ Features
+## ✨ Features
 
 * 🔐 Authentication interface
 * 📊 Interactive admin dashboard
@@ -32,47 +32,47 @@ Developed collaboratively by **Feven Tolosa** and **Hosanna Walle**.
 
 ---
 
-# 🛠️ Tech Stack
+## 🛠️ Tech Stack
 
-## Frontend
+### Frontend
 
 * Next.js
 * React.js
 * TypeScript
 * Tailwind CSS
 
-## Backend & Database
+### Backend & Database
 
 * SQLite
 * API Routes
 
-## Deployment
+### Deployment
 
 * Vercel
 
 ---
 
-# 🚀 Getting Started
+## 🚀 Getting Started
 
-## Clone the Repository
+### Clone the Repository
 
 ```bash
 git clone https://github.com/your-username/security-system.git
 ```
 
-## Navigate to the Project Folder
+### Navigate to the Project Folder
 
 ```bash
 cd security-system
 ```
 
-## Install Dependencies
+### Install Dependencies
 
 ```bash
 npm install
 ```
 
-## Run the Development Server
+### Run the Development Server
 
 ```bash
 npm run dev
@@ -86,7 +86,7 @@ http://localhost:3000
 
 ---
 
-# 📂 Project Structure
+## 📂 Project Structure
 
 ```bash
 security-system/
@@ -103,7 +103,7 @@ security-system/
 
 ---
 
-# 🌍 Live Deployment
+## 🌍 Live Deployment
 
 The project is deployed and publicly accessible on Vercel:
 
@@ -111,20 +111,19 @@ The project is deployed and publicly accessible on Vercel:
 
 ---
 
-# 👩‍💻 Developers
+## 👩‍💻 Developers
 
-### [Feven Tolosa](https://github.com/Feven-Tolosa)
-
-### [Hosanna Walle](https://github.com/hosanna1616)
+#### [Feven Tolosa](https://github.com/Feven-Tolosa)
+#### [Hosanna Walle](https://github.com/hosanna1616)
 
 ---
 
-# 📄 License
+## 📄 License
 
 This project was developed for educational, learning, and portfolio purposes.
 
 ---
 
-# ⭐ Support
+## ⭐ Support
 
-If you like this project, feel free to give it a ⭐ on GitHub and support our work.
+If you like this project, feel free to give it a ⭐ and support our work.
