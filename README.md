@@ -113,8 +113,8 @@ The project is deployed and publicly accessible on Vercel:
 
 ## 👩‍💻 Developers
 
-#### [Feven Tolosa](https://github.com/Feven-Tolosa)
-#### [Hosanna Walle](https://github.com/hosanna1616)
+### [Feven Tolosa](https://github.com/Feven-Tolosa) 
+### [Hosanna Walle](https://github.com/hosanna1616)
 
 ---
 
